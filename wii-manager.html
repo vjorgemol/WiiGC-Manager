@@ -488,6 +488,86 @@
   .badge-wfs { background: rgba(91,127,255,0.15); color: var(--accent); }
   .badge-iso { background: rgba(240,160,64,0.15); color: var(--amber); }
   .badge-wbfs { background: rgba(160,108,240,0.15); color: var(--purple); }
+  .badge-gc { background: rgba(160,108,240,0.22); color: #c084fc; border: 1px solid rgba(160,108,240,0.4); }
+  .badge-wii { background: rgba(91,127,255,0.18); color: #7094ff; border: 1px solid rgba(91,127,255,0.35); }
+  .badge-disc { background: rgba(62,207,142,0.15); color: var(--green); border: 1px solid rgba(62,207,142,0.3); }
+
+  /* Device picker & format styles */
+  .device-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; max-height: 280px; overflow-y: auto; }
+  .device-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .device-card:hover:not(.locked) {
+    border-color: var(--accent);
+    background: var(--bg4);
+  }
+  .device-card.selected {
+    border-color: var(--accent);
+    background: rgba(91,127,255,0.12);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .device-card.locked {
+    opacity: 0.6;
+    cursor: not-allowed;
+    border-color: rgba(242,107,107,0.3);
+    background: rgba(242,107,107,0.05);
+  }
+  .device-icon { font-size: 20px; color: var(--text2); flex-shrink: 0; }
+  .device-info { flex: 1; min-width: 0; }
+  .device-title { font-weight: 600; font-size: 13px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .device-meta { font-size: 11px; color: var(--text2); margin-top: 3px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .device-tag { padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 500; }
+  .device-tag-usb { background: rgba(62,207,142,0.15); color: var(--green); }
+  .device-tag-sys { background: rgba(242,107,107,0.18); color: var(--red); }
+  .device-tag-part { background: rgba(91,127,255,0.15); color: var(--accent); }
+
+  .format-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--card-r);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .format-option {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    background: var(--bg3);
+    transition: all 0.15s;
+  }
+  .format-option:hover { border-color: var(--border2); }
+  .format-option.active { border-color: var(--accent); background: rgba(91,127,255,0.08); }
+  .format-title { font-weight: 600; font-size: 13px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .format-desc { font-size: 12px; color: var(--text2); line-height: 1.4; }
+
+  /* GameCube inspector */
+  .gc-preview-box {
+    display: flex; gap: 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    margin: 12px 0;
+  }
+  .gc-preview-cover {
+    width: 90px; height: 125px;
+    border-radius: 6px;
+    background: var(--bg2);
+    object-fit: cover;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
 
   .empty-state {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -709,7 +789,13 @@
 <aside>
   <div class="sidebar-section">Vistas</div>
   <button class="nav-btn active" onclick="showView('library')" id="nav-library">
-    <span class="icon">▦</span> Biblioteca
+    <span class="icon">▦</span> Videoteca
+  </button>
+  <button class="nav-btn" onclick="showView('gamecube')" id="nav-gamecube">
+    <span class="icon">🎮</span> GameCube
+  </button>
+  <button class="nav-btn" onclick="showView('format')" id="nav-format">
+    <span class="icon">💾</span> Formatear / Preparar
   </button>
   <button class="nav-btn" onclick="showView('convert')" id="nav-convert">
     <span class="icon">⇌</span> Convertir
@@ -721,25 +807,31 @@
     <span class="icon">⚙</span> Ajustes
   </button>
 
-  <div class="sidebar-section">Filtros</div>
-  <button class="nav-btn" onclick="filterGames('all')" id="filter-all">
-    <span class="icon">◈</span> Todos los juegos
-  </button>
-  <button class="nav-btn" onclick="filterGames('wfs')" id="filter-wfs">
-    <span class="icon">◉</span> Formato WFS
-  </button>
-  <button class="nav-btn" onclick="filterGames('iso')" id="filter-iso">
-    <span class="icon">◎</span> Formato ISO
-  </button>
-  <button class="nav-btn" onclick="filterGames('wbfs')" id="filter-wbfs">
-    <span class="icon">◌</span> Formato WBFS
-  </button>
+  <div id="sidebar-filters">
+    <div class="sidebar-section">Filtros</div>
+    <button class="nav-btn" onclick="filterGames('all')" id="filter-all">
+      <span class="icon">◈</span> Todos los juegos
+    </button>
+    <button class="nav-btn" onclick="filterGames('wii')" id="filter-wii">
+      <span class="icon">💿</span> Juegos Wii
+    </button>
+    <button class="nav-btn" onclick="filterGames('gc')" id="filter-gc">
+      <span class="icon">🎮</span> Juegos GameCube
+    </button>
+    <button class="nav-btn" onclick="filterGames('wbfs')" id="filter-wbfs">
+      <span class="icon">◌</span> Formato WBFS
+    </button>
+    <button class="nav-btn" onclick="filterGames('iso')" id="filter-iso">
+      <span class="icon">◎</span> Formato ISO / GCM
+    </button>
+  </div>
 
   <div class="device-status">
-    <div class="device-label">Ruta WFS / USB</div>
-    <div class="device-path" style="flex:1;min-width:0">
+    <div class="device-label">Ruta WFS / USB / FAT32</div>
+    <div class="device-path" style="flex:1;min-width:0;display:flex;align-items:center;gap:6px">
       <div class="dot off" id="device-dot"></div>
-      <input type="text" id="device-path" placeholder="/dev/sdb1 (vacío = auto)">
+      <input type="text" id="device-path" placeholder="/dev/sdb1 o /media/usb" style="flex:1;min-width:0">
+      <button class="btn" style="padding:4px 8px;font-size:11px" onclick="browseDevicePath()" title="Examinar carpeta o unidad">📂</button>
     </div>
     <div style="margin-top:8px">
       <button class="btn" style="width:100%; justify-content:center" onclick="scanDevice()">
@@ -785,7 +877,8 @@
         <span style="color:var(--text3);font-size:14px">⌕</span>
         <input type="text" id="search" placeholder="Buscar juego, ID…" oninput="filterSearch()">
       </div>
-      <button class="btn primary" onclick="openAddModal()">+ Añadir juego</button>
+      <button class="btn primary" onclick="openAddModal()">+ Añadir Wii</button>
+      <button class="btn" style="border-color:rgba(160,108,240,0.5);color:#c084fc;background:rgba(160,108,240,0.1)" onclick="openAddGCModal()">🎮 + Añadir GameCube</button>
       <button class="btn danger" id="btn-delete" onclick="deleteSelected()" disabled>⌦ Eliminar</button>
       <button class="btn" onclick="loadCovers()">⊡ Carátulas</button>
       <button class="btn" onclick="refreshLibrary()">↺</button>
@@ -808,7 +901,7 @@
             <th onclick="sortBy('title')">Título ↕</th>
             <th onclick="sortBy('id')">ID</th>
             <th onclick="sortBy('size')">Tamaño ↕</th>
-            <th>Formato</th>
+            <th>Plataforma / Formato</th>
             <th>Región</th>
             <th>Acciones</th>
           </tr>
@@ -858,14 +951,14 @@ Para instalar wit/wwt: https://wit.wiimm.de/download.html
           <label class="form-label">Archivo ISO origen</label>
           <div style="display:flex;gap:8px">
             <input class="form-input" id="src-iso" placeholder="/ruta/al/juego.iso">
-            <button class="btn" onclick="browseFile('src-iso','iso')">Examinar</button>
+            <button class="btn" onclick="browseFile('src-iso','iso')">📂 Examinar</button>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">Destino (directorio WFS)</label>
           <div style="display:flex;gap:8px">
             <input class="form-input" id="dst-wfs" placeholder="/media/usb/wii">
-            <button class="btn" onclick="browseDir('dst-wfs')">Examinar</button>
+            <button class="btn" onclick="browseDir('dst-wfs')">📂 Examinar</button>
           </div>
         </div>
         <div class="form-group">
@@ -894,14 +987,14 @@ Para instalar wit/wwt: https://wit.wiimm.de/download.html
           <label class="form-label">Juego WFS origen (ID o ruta)</label>
           <div style="display:flex;gap:8px">
             <input class="form-input" id="src-wfs" placeholder="RMCP01 o /media/usb/wii/RMCP01">
-            <button class="btn" onclick="pickFromLibrary('src-wfs')">Elegir</button>
+            <button class="btn" onclick="browseFile('src-wfs','iso')">📂 Examinar</button>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">Archivo ISO destino</label>
           <div style="display:flex;gap:8px">
             <input class="form-input" id="dst-iso" placeholder="/home/usuario/exports/juego.iso">
-            <button class="btn" onclick="browseFile('dst-iso')">Examinar</button>
+            <button class="btn" onclick="browseFile('dst-iso')">📂 Examinar</button>
           </div>
         </div>
         <div class="form-group">
@@ -1062,6 +1155,196 @@ Para instalar wit/wwt: https://wit.wiimm.de/download.html
     </div>
   </div>
 
+  <!-- ══ GAMECUBE VIEW ══ -->
+  <div id="view-gamecube" style="display:none">
+    <!-- Stats bar GC -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-label">Juegos GameCube</div>
+        <div class="stat-value" id="stat-gc-games">0</div>
+        <div class="stat-sub">en carpeta /games/</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Espacio GameCube</div>
+        <div class="stat-value" id="stat-gc-size">0.0 GB</div>
+        <div class="stat-sub">usado por GC</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Multidisco (2 Discos)</div>
+        <div class="stat-value" id="stat-gc-multidisc">0</div>
+        <div class="stat-sub">juegos con Disco 2</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Estructura Nintendont</div>
+        <div class="stat-value" style="font-size:12px;color:var(--green)">✓ Preparado</div>
+        <div class="stat-sub">/games/[Título] [ID]/game.iso</div>
+      </div>
+    </div>
+
+    <!-- Toolbar GC -->
+    <div class="toolbar">
+      <button class="btn" style="border-color:rgba(160,108,240,0.5);color:#c084fc;background:rgba(160,108,240,0.12)" onclick="openAddGCModal()">🎮 + Añadir juego GC</button>
+      <button class="btn" onclick="refreshGC()">↺ Refrescar estadísticas</button>
+    </div>
+
+    <!-- GC Grid/List: el listado/búsqueda/carátulas ya viven en Videoteca + filtros.
+         Se mantienen ocultas en el DOM para no romper refreshGC()/renderGCGames(). -->
+    <div class="game-grid active" id="gc-grid" style="display:none"></div>
+
+    <!-- GC List view -->
+    <div class="game-list" id="gc-list" style="display:none">
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>Título</th>
+            <th>ID</th>
+            <th>Tamaño</th>
+            <th>Discos</th>
+            <th>Región</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="gc-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- Terminal GC -->
+    <div class="terminal-panel" style="margin-top:20px">
+      <div class="term-header">
+        <div class="term-dot" style="background:#f26b6b"></div>
+        <div class="term-dot" style="background:#f0a040"></div>
+        <div class="term-dot" style="background:#3ecf8e"></div>
+        <span style="margin-left:8px">Estado y registro de GameCube</span>
+        <button style="margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;" onclick="document.getElementById('gc-term').innerHTML=''">limpiar</button>
+      </div>
+      <div class="term-output" id="gc-term">
+<span class="info">Gestor de GameCube para WiiFlow / Nintendont</span>
+Los juegos de GameCube se organizan en particiones FAT32 bajo la estructura:
+  <span class="cmd">/games/Nombre del Juego [GAMEID]/game.iso</span>  (Disco 1)
+  <span class="cmd">/games/Nombre del Juego [GAMEID]/disc2.iso</span> (Disco 2 opcional)
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FORMAT / PREPARATION VIEW ══ -->
+  <div id="view-format" style="display:none">
+    <div style="max-width:850px">
+      <div style="margin-bottom:20px">
+        <h2 style="font-size:18px;font-weight:600;margin-bottom:6px">Preparar y Formatear Unidad (Wii & GameCube)</h2>
+        <p style="color:var(--text2);font-size:12px;line-height:1.6">
+          Prepara automáticamente cualquier pendrive USB, disco externo o tarjeta SD para su uso con WiiFlow,
+          USB Loader GX y Nintendont. Incluye protección contra formateo accidental del sistema operativo.
+        </p>
+      </div>
+
+      <!-- Paso 1: Selección de unidad -->
+      <div class="format-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="section-title" style="display:flex;align-items:center;gap:8px">
+            <span style="background:var(--accent);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">1</span>
+            Seleccionar unidad o partición
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+            <button class="btn" style="padding:4px 10px;font-size:11px" onclick="loadFormatDevices()">↺ Actualizar unidades</button>
+            <button class="btn" style="padding:4px 10px;font-size:11px" onclick="window.stop()" title="Detiene cualquier carga pendiente del navegador">⏹ Detener carga del navegador</button>
+          </div>
+        </div>
+
+        <div style="font-size:12px;color:var(--text3);margin-bottom:8px">
+          Elige la unidad USB o tarjeta SD que deseas preparar:
+        </div>
+
+        <div class="device-list" id="format-device-list">
+          <div style="padding:20px;text-align:center;color:var(--text3)">Cargando dispositivos de almacenamiento…</div>
+        </div>
+      </div>
+
+      <!-- Paso 2: Configuración del formato -->
+      <div class="format-box">
+        <div class="section-title" style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <span style="background:var(--accent);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">2</span>
+          Sistema de archivos y estructura
+        </div>
+
+        <div class="format-option active" id="opt-fat32" onclick="selectFormatType('fat32')">
+          <div class="format-title">
+            <input type="radio" name="format-fs" id="radio-fat32" checked style="margin-right:6px">
+            <span>FAT32 — Recomendado (Wii + GameCube / WiiFlow / Nintendont)</span>
+            <span class="device-tag device-tag-usb" style="margin-left:auto">Estándar Universal</span>
+          </div>
+          <div class="format-desc">
+            Formatea la partición en FAT32 con tamaño de clúster de 32 KB (óptimo para evitar cuelgues de audio y vídeo en Nintendont).
+            Es el formato compatible simultáneamente con juegos de Wii (archivos .wbfs) y GameCube (.iso).
+          </div>
+        </div>
+
+        <div class="format-option" id="opt-wbfs" onclick="selectFormatType('wbfs')">
+          <div class="format-title">
+            <input type="radio" name="format-fs" id="radio-wbfs" style="margin-right:6px">
+            <span>WBFS Puro (Partición dedicada clásica con wwt)</span>
+          </div>
+          <div class="format-desc">
+            Partición sin sistema de archivos tradicional gestionada directamente con herramientas wwt. Solo compatible con juegos de Wii (no admite GameCube).
+          </div>
+        </div>
+
+        <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px" id="fat32-options">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Etiqueta del volumen (Nombre de la unidad)</label>
+            <input class="form-input" id="format-label" value="WII" placeholder="WII" maxlength="11">
+          </div>
+          <div class="form-group" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:flex-end">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--text)">
+              <input type="checkbox" id="format-create-folders" checked onchange="updateFormatNintendontAvailability()">
+              <span>Crear carpetas (/wbfs, /games, /apps, /wiiflow)</span>
+            </label>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <label id="format-nintendont-label" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--text)">
+            <input type="checkbox" id="format-install-nintendont" checked>
+            <span>🎮 Descargar e instalar Nintendont (último release) en /apps/Nintendont</span>
+          </label>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px;margin-left:24px">
+            Necesita conexión a Internet y requiere la opción "Crear carpetas" activada.
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 3: Confirmación y formateo -->
+      <div class="format-box" style="border-color:rgba(242,107,107,0.3);background:rgba(242,107,107,0.03)">
+        <div class="section-title" style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="background:var(--red);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">3</span>
+          Ejecutar formateo
+        </div>
+        <p style="color:var(--text2);font-size:12px;margin-bottom:16px">
+          ⚠️ <strong>Advertencia:</strong> El formateo eliminará todos los archivos presentes en la partición o unidad seleccionada.
+          Asegúrate de haber seleccionado la unidad correcta antes de continuar.
+        </p>
+
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="btn danger" id="btn-start-format" style="padding:10px 20px;font-size:13px;font-weight:600" onclick="openFormatConfirmModal()" disabled>
+            ⚡ Formatear y preparar unidad seleccionada
+          </button>
+          <span id="format-target-summary" style="font-size:12px;color:var(--text3)">Ninguna unidad seleccionada</span>
+        </div>
+      </div>
+
+      <!-- Terminal Format Output -->
+      <div class="terminal-panel" style="margin-top:20px">
+        <div class="term-header">
+          <div class="term-dot" style="background:#f26b6b"></div>
+          <div class="term-dot" style="background:#f0a040"></div>
+          <div class="term-dot" style="background:#3ecf8e"></div>
+          <span style="margin-left:8px">Salida de formateo y comandos</span>
+        </div>
+        <div class="term-output" id="term-format">Esperando selección de unidad…</div>
+      </div>
+    </div>
+  </div>
+
 </main>
 </div>
 
@@ -1120,6 +1403,95 @@ Para instalar wit/wwt: https://wit.wiimm.de/download.html
       <button class="btn" onclick="closeModal('modal-detail')">Cerrar</button>
       <button class="btn" onclick="extractSelected()">Exportar ISO</button>
       <button class="btn danger" onclick="deleteGame(window._detailId)">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: AÑADIR JUEGO GAMECUBE ══ -->
+<div class="modal-overlay" id="modal-add-gc">
+  <div class="modal" style="width:min(600px,95vw)">
+    <h2>🎮 Añadir juego GameCube (Nintendont / WiiFlow)</h2>
+    <div class="form-group">
+      <label class="form-label">Archivo origen (.iso / .gcm / .ciso)</label>
+      <div style="display:flex;gap:8px">
+        <input class="form-input" id="add-gc-src" placeholder="/ruta/al/juego_gamecube.iso" readonly
+               style="cursor:pointer" onclick="browseFile('add-gc-src','gc')">
+        <button class="btn" onclick="browseFile('add-gc-src','gc')">📂 Examinar</button>
+      </div>
+    </div>
+
+    <!-- Live Preview Box -->
+    <div id="gc-inspect-preview" class="gc-preview-box" style="display:none">
+      <img id="gc-inspect-cover" class="gc-preview-cover" src="" alt="Carátula" onerror="this.src=''">
+      <div style="flex:1">
+        <div id="gc-inspect-title" style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px">—</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <span id="gc-inspect-id" class="game-id-badge">—</span>
+          <span id="gc-inspect-region" class="tag tag-ok">—</span>
+          <span id="gc-inspect-size" style="font-size:12px;color:var(--text2)">— GB</span>
+        </div>
+        <div style="font-size:11px;color:var(--text3)" id="gc-inspect-path"></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label class="form-label">Número de disco</label>
+        <select class="form-select" id="add-gc-disc" onchange="updateGCAddPreview()">
+          <option value="1">Disco 1 (game.iso)</option>
+          <option value="2">Disco 2 (disc2.iso)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Título personalizado (opcional)</label>
+        <input class="form-input" id="add-gc-title" placeholder="Detectado automáticamente" oninput="updateGCAddPreview()">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Unidad o carpeta destino (/games)</label>
+      <div style="display:flex;gap:8px">
+        <input class="form-input" id="add-gc-dst" placeholder="/media/usb o /media/usb/games">
+        <button class="btn" onclick="browseDir('add-gc-dst')">📂 Examinar</button>
+      </div>
+    </div>
+
+    <div style="background:var(--bg3);border-radius:8px;padding:10px;font-size:11px;color:var(--text3);font-family:monospace;margin-bottom:8px" id="add-gc-preview">
+      Destino: [destino]/games/[Título] [ID]/game.iso
+    </div>
+
+    <div id="add-gc-progress" style="display:none">
+      <div class="progress-bar"><div class="progress-fill" id="add-gc-fill" style="width:0%"></div></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px" id="add-gc-status">Copiando imagen GameCube…</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-add-gc')">Cancelar</button>
+      <button class="btn primary" id="btn-submit-add-gc" onclick="submitAddGC()">Copiar e Instalar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: CONFIRMACIÓN DE FORMATEO ══ -->
+<div class="modal-overlay" id="modal-confirm-format">
+  <div class="modal" style="width:min(500px,95vw);border-color:rgba(242,107,107,0.5)">
+    <h2 style="color:var(--red);display:flex;align-items:center;gap:8px">
+      <span>⚠️</span> ¿Formatear unidad?
+    </h2>
+    <div style="background:rgba(242,107,107,0.1);border:1px solid rgba(242,107,107,0.25);border-radius:8px;padding:14px;margin-bottom:16px">
+      <div style="font-weight:600;margin-bottom:6px" id="confirm-format-dev-name">Dispositivo: /dev/sdX</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:4px" id="confirm-format-dev-details">Modelo, Tamaño</div>
+      <div style="font-size:12px;color:var(--text2)" id="confirm-format-fs-details">Formato: FAT32 (32 KB cluster)</div>
+    </div>
+
+    <p style="color:var(--text2);font-size:12px;line-height:1.5;margin-bottom:16px">
+      Esta operación <strong>borrará de forma irreversible</strong> todos los archivos y particiones contenidos en esta unidad.
+      ¿Estás seguro de que deseas continuar?
+    </p>
+
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-confirm-format')">Cancelar</button>
+      <button class="btn danger" onclick="executeFormat()">Sí, formatear ahora</button>
     </div>
   </div>
 </div>
@@ -1244,10 +1616,20 @@ let settings = {
  * @returns {Promise<Object>} Respuesta JSON del servidor
  * @throws {Error} Si el servidor responde con un código HTTP de error
  */
-async function apiGet(endpoint, params = {}) {
+async function apiGet(endpoint, params = {}, timeoutMs = 30000) {
   const qs  = new URLSearchParams(params).toString();
   const url = `${API}${endpoint}${qs ? '?' + qs : ''}`;
-  const r   = await fetch(url);
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  let r;
+  try {
+    r = await fetch(url, { signal: ctrl.signal });
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error(`Tiempo de espera agotado (${Math.round(timeoutMs/1000)}s) al conectar con ${endpoint}`);
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
@@ -1260,12 +1642,23 @@ async function apiGet(endpoint, params = {}) {
  * @returns {Promise<Object>} Respuesta JSON del servidor
  * @throws {Error} Si el servidor responde con un código HTTP de error
  */
-async function apiPost(endpoint, body = {}) {
-  const r = await fetch(`${API}${endpoint}`, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(body)
-  });
+async function apiPost(endpoint, body = {}, timeoutMs = 20 * 60 * 1000) {
+  const ctrl  = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  let r;
+  try {
+    r = await fetch(`${API}${endpoint}`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(body),
+      signal:  ctrl.signal
+    });
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error(`Tiempo de espera agotado (${Math.round(timeoutMs/1000)}s) al conectar con ${endpoint}`);
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
 }
@@ -1333,10 +1726,18 @@ window.addEventListener('DOMContentLoaded', async () => {
  */
 function showView(v) {
   currentView = v;
-  ['library','convert','verify','settings'].forEach(id => {
-    document.getElementById('view-'+id).style.display = id===v ? '' : 'none';
+  ['library','gamecube','format','convert','verify','settings'].forEach(id => {
+    const el = document.getElementById('view-'+id);
+    if (el) el.style.display = id===v ? '' : 'none';
     document.getElementById('nav-'+id)?.classList.toggle('active', id===v);
   });
+  const sidebarFilters = document.getElementById('sidebar-filters');
+  if (sidebarFilters) sidebarFilters.style.display = v === 'library' ? '' : 'none';
+  if (v === 'format') {
+    loadFormatDevices();
+  } else if (v === 'gamecube') {
+    refreshGC();
+  }
 }
 
 /**
@@ -1399,7 +1800,9 @@ function renderGrid() {
         <div class="game-title" title="${esc(g.title)}">${esc(g.title)}</div>
         <div class="game-meta">
           <span class="game-id-badge">${g.id}</span>
-          <span class="badge badge-wbfs">WBFS</span>
+          ${g.platform==='gc'
+            ? '<span class="badge badge-gc">GameCube</span>'
+            : `<span class="badge badge-${g.fmt==='iso'?'iso':'wbfs'}">${(g.fmt||'wbfs').toUpperCase()}</span>`}
         </div>
         <div class="game-meta" style="margin-top:3px">
           <span>${g.size ? g.size.toFixed(2)+' GB' : '—'}</span>
@@ -1422,7 +1825,11 @@ function renderList() {
       <td style="font-weight:500">${esc(g.title)}</td>
       <td style="font-family:monospace;color:var(--accent)">${g.id}</td>
       <td>${g.size ? g.size.toFixed(2)+' GB' : '—'}</td>
-      <td><span class="badge badge-wbfs">WBFS</span></td>
+      <td>
+        ${g.platform==='gc'
+          ? '<span class="badge badge-gc">GameCube</span>'
+          : `<span class="badge badge-${g.fmt==='iso'?'iso':'wbfs'}">Wii · ${(g.fmt||'wbfs').toUpperCase()}</span>`}
+      </td>
       <td>${g.region}</td>
       <td>
         <button class="btn" style="padding:4px 8px;font-size:11px"
@@ -1505,7 +1912,7 @@ function toggleAll() {
  */
 function filterGames(fmt) {
   activeFilter = fmt;
-  ['all','wfs','iso','wbfs'].forEach(f =>
+  ['all','wii','gc','wfs','iso','wbfs'].forEach(f =>
     document.getElementById('filter-'+f)?.classList.toggle('active', f===fmt));
   applyFilters();
 }
@@ -1514,15 +1921,22 @@ function filterGames(fmt) {
 function filterSearch() { applyFilters(); }
 
 /**
- * Aplica el texto de búsqueda y el filtro de formato activo sobre `games`,
+ * Aplica el texto de búsqueda y el filtro de formato/plataforma activo sobre `games`,
  * ordena el resultado según sortCol/sortDir y lo guarda en `filtered`.
  * Después llama a renderGames() para refrescar la UI.
  */
 function applyFilters() {
   const q = document.getElementById('search').value.toLowerCase();
   filtered = games.filter(g => {
-    // Filtrar por texto (título o ID)
-    return !q || g.title.toLowerCase().includes(q) || g.id.toLowerCase().includes(q);
+    const matchText = !q || g.title.toLowerCase().includes(q) || g.id.toLowerCase().includes(q);
+    if (!matchText) return false;
+
+    if (activeFilter === 'wii') return g.platform !== 'gc';
+    if (activeFilter === 'gc') return g.platform === 'gc';
+    if (activeFilter === 'wbfs') return g.fmt === 'wbfs';
+    if (activeFilter === 'iso') return g.fmt === 'iso' || g.fmt === 'gcm' || g.fmt === 'ciso';
+    if (activeFilter === 'wfs') return g.fmt === 'wfs';
+    return true;
   });
   // Ordenar: strings con localeCompare, números con resta
   filtered.sort((a,b) => {
@@ -2381,7 +2795,7 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
  * @param {string} inputId - ID del campo donde escribir la ruta seleccionada
  * @param {string} filter  - 'iso' para filtrar imágenes Wii, '' para todos
  */
-async function browseFile(inputId, filter = '') {
+async function _browseFileImpl(inputId, filter = '') {
   const btn = document.getElementById('btn-browse-iso');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Abriendo…'; }
   try {
@@ -2470,6 +2884,691 @@ function download(filename, content) {
   a.download = filename;
   a.click();
 }
+
+// ═══════════════════════════════════════════════
+//  21. GAMECUBE — BIBLIOTECA Y GESTIÓN
+// ═══════════════════════════════════════════════
+
+/** Lista completa de juegos GameCube */
+let gcGames = [];
+/** Lista filtrada de GC games (tras búsqueda) */
+let gcFiltered = [];
+
+/**
+ * Carga la lista de juegos GameCube desde /api/gamecube/list usando la ruta
+ * configurada en el sidebar, y renderiza la vista GC.
+ */
+async function refreshGC() {
+  const path = document.getElementById('device-path').value.trim();
+  const gcTerm = document.getElementById('gc-term');
+  if (gcTerm) {
+    gcTerm.innerHTML += `<span class="info">Buscando juegos GameCube en ${path || '(sin ruta configurada)'}…</span>\n`;
+    gcTerm.scrollTop = gcTerm.scrollHeight;
+  }
+
+  if (!path) {
+    gcGames = [];
+    gcFiltered = [];
+    renderGCGames();
+    if (gcTerm) {
+      gcTerm.innerHTML += `<span class="err">⚠ Configura la ruta USB/SD en el sidebar y pulsa "Explorar dispositivo" antes de usar GameCube.</span>\n`;
+      gcTerm.scrollTop = gcTerm.scrollHeight;
+    }
+    return;
+  }
+
+  try {
+    const data = await apiGet('/api/gamecube/list', { path });
+    gcGames    = data.games || [];
+    gcFiltered = [...gcGames];
+
+    // Update stats
+    const totalSize = gcGames.reduce((a, g) => a + (g.size || 0), 0);
+    const multiDisc = gcGames.filter(g => g.disc_count > 1).length;
+    document.getElementById('stat-gc-games').textContent    = gcGames.length;
+    document.getElementById('stat-gc-size').textContent     = totalSize.toFixed(1) + ' GB';
+    document.getElementById('stat-gc-multidisc').textContent = multiDisc;
+
+    renderGCGames();
+
+    if (gcTerm) {
+      gcTerm.innerHTML += `<span class="ok">✓ ${gcGames.length} juego(s) GameCube encontrados en ${data.games_dir || path}</span>\n`;
+      gcTerm.scrollTop = gcTerm.scrollHeight;
+    }
+  } catch(e) {
+    if (gcTerm) {
+      gcTerm.innerHTML += `<span class="err">✗ Error: ${esc(e.message)}</span>\n`;
+      gcTerm.scrollTop = gcTerm.scrollHeight;
+    }
+  }
+}
+
+/** Renderiza grid y lista de GC según gcFiltered */
+function renderGCGames() {
+  renderGCGrid();
+  renderGCList();
+}
+
+/**
+ * Genera el HTML de la cuadrícula GameCube.
+ */
+function renderGCGrid() {
+  const grid = document.getElementById('gc-grid');
+  if (!gcFiltered.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="icon">🎮</div>
+      <div>No hay juegos GameCube. Añade uno pulsando "＋ Añadir juego GC".</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px">
+        Los juegos deben estar en /games/[Título] [ID]/game.iso
+      </div>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = gcFiltered.map(g => {
+    const discBadge = g.disc_count > 1
+      ? `<span class="badge badge-disc">2 Discos</span>` : '';
+    const regionBadge = g.region
+      ? `<span style="font-size:10px;color:var(--text3)">${g.region}</span>` : '';
+    return `
+    <div class="game-card" onclick="showGCDetail('${esc(g.id)}', '${encodeURIComponent(g.folder||'')}')">
+      <div class="game-cover">
+        <img id="gccover-${g.id}" src="" alt="" style="display:none"
+             onerror="this.style.display='none'"
+             onload="this.style.display='block';document.getElementById('gcnocover-${g.id}').style.display='none'">
+        <div class="no-cover" id="gcnocover-${g.id}">
+          <div style="font-size:22px;margin-bottom:4px">🎮</div>${esc(g.id||'GC')}
+        </div>
+        <div class="cover-id">${esc(g.id||'')}</div>
+      </div>
+      <div class="game-info">
+        <div class="game-title" title="${esc(g.title)}">${esc(g.title)}</div>
+        <div class="game-meta">
+          <span class="badge badge-gc">GameCube</span>
+          ${discBadge}
+        </div>
+        <div class="game-meta" style="margin-top:3px">
+          <span>${g.size ? g.size.toFixed(2)+' GB' : '—'}</span>
+          ${regionBadge}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/**
+ * Genera el HTML de la tabla (lista) GameCube.
+ */
+function renderGCList() {
+  const tbody = document.getElementById('gc-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = gcFiltered.map(g => `
+    <tr onclick="showGCDetail('${esc(g.id)}', '${encodeURIComponent(g.folder||'')}')">
+      <td style="font-size:18px">🎮</td>
+      <td style="font-weight:500">${esc(g.title)}</td>
+      <td style="font-family:monospace;color:var(--purple)">${esc(g.id||'—')}</td>
+      <td>${g.size ? g.size.toFixed(2)+' GB' : '—'}</td>
+      <td>
+        ${g.disc_count > 1
+          ? '<span class="badge badge-disc">2 Discos</span>'
+          : '<span style="color:var(--text3)">1 Disco</span>'}
+      </td>
+      <td>${esc(g.region||'—')}</td>
+      <td>
+        <button class="btn danger" style="padding:4px 8px;font-size:11px"
+                onclick="deleteGCGame('${encodeURIComponent(g.folder||'')}');event.stopPropagation()">⌦</button>
+      </td>
+    </tr>`).join('');
+}
+
+/**
+ * Muestra un mini-detalle de un juego GC en el terminal GC y ofrece eliminación.
+ */
+function showGCDetail(id, folderEncoded) {
+  const folder = decodeURIComponent(folderEncoded);
+  const g = gcGames.find(x => x.id === id && (x.folder || '') === folder) || gcGames.find(x => x.id === id);
+  if (!g) return;
+  const gcTerm = document.getElementById('gc-term');
+  if (gcTerm) {
+    gcTerm.innerHTML += `<span class="cmd">── ${esc(g.title)} ──</span>
+  ID: ${esc(g.id||'?')}  |  Región: ${esc(g.region||'?')}  |  Tamaño: ${g.size ? g.size.toFixed(2)+' GB' : '?'}
+  Discos: ${g.disc_count||1}  |  Carpeta: ${esc(g.folder||'?')}
+`;
+    gcTerm.scrollTop = gcTerm.scrollHeight;
+  }
+  if (confirm(`¿Eliminar "${g.title}" de la videoteca GameCube?\n\nSe borrará toda la carpeta:\n${g.folder || '?'}`)) {
+    deleteGCGame(folderEncoded);
+  }
+}
+
+/**
+ * Elimina un juego GameCube por su ruta de carpeta.
+ * @param {string} folderEncoded - Ruta de carpeta URL-encoded
+ */
+async function deleteGCGame(folderEncoded) {
+  const folder = decodeURIComponent(folderEncoded);
+  const gcTerm = document.getElementById('gc-term');
+  try {
+    const data = await apiPost('/api/gamecube/remove', { folder });
+    if (data.success) {
+      if (gcTerm) {
+        gcTerm.innerHTML += `<span class="ok">✓ Juego GC eliminado: ${esc(folder)}</span>\n`;
+        gcTerm.scrollTop = gcTerm.scrollHeight;
+      }
+      await refreshGC();
+    } else {
+      if (gcTerm) {
+        gcTerm.innerHTML += `<span class="err">✗ ${esc(data.error||'Error desconocido')}</span>\n`;
+        gcTerm.scrollTop = gcTerm.scrollHeight;
+      }
+    }
+  } catch(e) {
+    if (gcTerm) {
+      gcTerm.innerHTML += `<span class="err">✗ ${esc(e.message)}</span>\n`;
+      gcTerm.scrollTop = gcTerm.scrollHeight;
+    }
+  }
+}
+
+/**
+ * Intenta cargar carátula de GameCube probando combinaciones región/tipo.
+ * Usa la ruta /gcn/ de GameTDB (específica para GameCube).
+ */
+function tryLoadGCCover(gameId, regions, types) {
+  return new Promise(resolve => {
+    const combos = [];
+    for (const type of types)
+      for (const region of regions) {
+        combos.push({ type, region, base: 'gcn' });
+        combos.push({ type, region, base: 'wii' }); // fallback wii
+      }
+
+    let i = 0;
+    function next() {
+      if (i >= combos.length) { resolve(null); return; }
+      const { type, region, base } = combos[i++];
+      const url = `https://art.gametdb.com/${base}/${type}/${region}/${gameId}.png`;
+      const img = new Image();
+      img.onload  = () => resolve(url);
+      img.onerror = next;
+      img.src = url;
+    }
+    next();
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  22. MODAL: AÑADIR JUEGO GAMECUBE
+// ═══════════════════════════════════════════════
+
+/** Metadatos del archivo GC actualmente inspeccionado */
+let _gcInspectMeta = null;
+
+/**
+ * Abre el modal de añadir juego GameCube, pre-rellenando el destino.
+ */
+function openAddGCModal() {
+  _gcInspectMeta = null;
+  document.getElementById('add-gc-src').value   = '';
+  document.getElementById('add-gc-title').value = '';
+  document.getElementById('add-gc-disc').value  = '1';
+  document.getElementById('add-gc-dst').value   = document.getElementById('device-path').value.trim();
+  document.getElementById('gc-inspect-preview').style.display = 'none';
+  updateGCAddPreview();
+  openModal('modal-add-gc');
+}
+
+/**
+ * Actualiza la preview de destino en el modal de añadir GC.
+ */
+function updateGCAddPreview() {
+  const dst   = document.getElementById('add-gc-dst')?.value   || '[destino]';
+  const title = document.getElementById('add-gc-title')?.value || (_gcInspectMeta?.title) || '[Título]';
+  const id    = _gcInspectMeta?.id || '[ID]';
+  const disc  = document.getElementById('add-gc-disc')?.value  || '1';
+  const file  = disc === '2' ? 'disc2.iso' : 'game.iso';
+  const el    = document.getElementById('add-gc-preview');
+  if (el) el.textContent = `Destino: ${dst}/games/${title} [${id}]/${file}`;
+}
+
+/**
+ * Inspecciona el archivo GC seleccionado y muestra la preview en el modal.
+ * Se llama cuando el campo add-gc-src cambia (listener en document input).
+ */
+async function inspectGCFile(path) {
+  if (!path) return;
+  try {
+    const data = await apiGet('/api/gamecube/inspect', { path });
+    _gcInspectMeta = data;
+
+    const preview = document.getElementById('gc-inspect-preview');
+    if (preview) preview.style.display = 'flex';
+
+    const titleEl = document.getElementById('gc-inspect-title');
+    const idEl    = document.getElementById('gc-inspect-id');
+    const regionEl= document.getElementById('gc-inspect-region');
+    const sizeEl  = document.getElementById('gc-inspect-size');
+    const pathEl  = document.getElementById('gc-inspect-path');
+    const coverEl = document.getElementById('gc-inspect-cover');
+
+    if (titleEl)  titleEl.textContent  = data.title  || '—';
+    if (idEl)     idEl.textContent     = data.id     || '—';
+    if (regionEl) regionEl.textContent = data.region || '—';
+    if (sizeEl)   sizeEl.textContent   = data.size_gb ? data.size_gb.toFixed(2) + ' GB' : '—';
+    if (pathEl)   pathEl.textContent   = path;
+
+    // Prefill title if empty
+    const titleInput = document.getElementById('add-gc-title');
+    if (titleInput && !titleInput.value && data.title) {
+      titleInput.value = data.title;
+    }
+
+    // Try to load cover
+    if (coverEl && data.id) {
+      const regions = [settings.coverRegion, ...COVER_REGIONS.filter(r => r !== settings.coverRegion)];
+      const types   = [settings.coverType,   ...COVER_TYPES.filter(t => t !== settings.coverType)];
+      tryLoadGCCover(data.id, regions, types).then(url => {
+        if (url) { coverEl.src = url; }
+      });
+    }
+
+    updateGCAddPreview();
+  } catch(e) {
+    console.warn('GC inspect error:', e);
+  }
+}
+
+// Listener para inspección automática al cambiar src GC
+document.addEventListener('input', e => {
+  if (e.target.id === 'add-gc-src' && e.target.value) {
+    inspectGCFile(e.target.value);
+  }
+  if (e.target.id === 'add-gc-dst' || e.target.id === 'add-gc-title' || e.target.id === 'add-gc-disc') {
+    updateGCAddPreview();
+  }
+});
+
+// browseFile delega en la implementación real y, además, dispara la
+// inspección GC cuando el campo rellenado es el de origen de GameCube.
+async function browseFile(inputId, filter) {
+  await _browseFileImpl(inputId, filter);
+  if (inputId === 'add-gc-src') {
+    const val = document.getElementById('add-gc-src')?.value;
+    if (val) inspectGCFile(val);
+  }
+}
+
+/**
+ * Envía la petición de añadir juego GameCube al backend.
+ * Muestra progreso animado mientras se copia el archivo (puede tardar varios minutos).
+ */
+async function submitAddGC() {
+  const src   = document.getElementById('add-gc-src').value.trim();
+  const dst   = document.getElementById('add-gc-dst').value.trim();
+  const disc  = parseInt(document.getElementById('add-gc-disc').value) || 1;
+  const title = document.getElementById('add-gc-title').value.trim();
+
+  if (!src) { alert('Selecciona un archivo de imagen GameCube'); return; }
+  if (!dst) { alert('Especifica el directorio de destino (USB/SD)'); return; }
+
+  showProgress('add-gc', 2, 'Enviando al servidor…');
+  const btn = document.getElementById('btn-submit-add-gc');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Copiando…'; }
+
+  const gcTerm = document.getElementById('gc-term');
+
+  // Progreso animado — la copia de un ISO de GC puede tardar varios minutos
+  let fakePct = 2;
+  const fakeIv = setInterval(() => {
+    fakePct = Math.min(fakePct + 1, 92);
+    const gb = _gcInspectMeta?.size_gb || 0;
+    const msg = gb > 0 ? `Copiando ${(gb * fakePct / 100).toFixed(2)} / ${gb.toFixed(2)} GB…` : `Copiando… ${fakePct}%`;
+    showProgress('add-gc', fakePct, msg);
+  }, 2000);
+
+  try {
+    const data = await apiPost('/api/gamecube/add', {
+      src, dest: dst, disc, title,
+      id: _gcInspectMeta?.id || ''
+    });
+    clearInterval(fakeIv);
+
+    if (data.success) {
+      showProgress('add-gc', 100, '✓ Copiado correctamente');
+      if (gcTerm) {
+        gcTerm.innerHTML += `<span class="ok">✓ "${esc(data.title)}" [${esc(data.id)}] Disco ${data.disc} instalado en:\n  ${esc(data.dest_file)}</span>\n`;
+        gcTerm.scrollTop = gcTerm.scrollHeight;
+      }
+      closeModal('modal-add-gc');
+      showView('gamecube');
+      await refreshGC();
+    } else {
+      showProgress('add-gc', 0, 'Error');
+      if (gcTerm) {
+        gcTerm.innerHTML += `<span class="err">✗ ${esc(data.error || 'Error desconocido')}</span>\n`;
+        gcTerm.scrollTop = gcTerm.scrollHeight;
+      }
+    }
+  } catch(e) {
+    clearInterval(fakeIv);
+    showProgress('add-gc', 0, 'Error de conexión');
+    if (gcTerm) {
+      gcTerm.innerHTML += `<span class="err">✗ ${esc(e.message)}</span>\n`;
+      gcTerm.scrollTop = gcTerm.scrollHeight;
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Copiar e Instalar'; }
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  23. FORMATEAR / PREPARAR UNIDAD
+// ═══════════════════════════════════════════════
+
+/** Dispositivo seleccionado para formatear */
+let _selectedFormatDevice = null;
+/** Tipo de FS seleccionado para formatear */
+let _selectedFormatType = 'fat32';
+
+/**
+ * Carga la lista de dispositivos de almacenamiento desde /api/devices
+ * y renderiza las tarjetas en la vista de Formatear.
+ */
+async function loadFormatDevices() {
+  const listEl = document.getElementById('format-device-list');
+  if (!listEl) return;
+  listEl.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text3)">
+    <div class="spinner" style="margin:0 auto 8px"></div>
+    Detectando unidades de almacenamiento…
+  </div>`;
+
+  const termFmt = document.getElementById('term-format');
+
+  try {
+    const data = await apiGet('/api/devices');
+    const devs = data.devices || [];
+
+    if (!devs.length) {
+      listEl.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text3)">
+        No se detectaron unidades de almacenamiento. Conecta una unidad USB o tarjeta SD.
+      </div>`;
+      return;
+    }
+
+    // Generar tarjetas por dispositivo y sus particiones
+    listEl.innerHTML = devs.map(dev => {
+      const cards = [];
+
+      // Tarjeta del disco completo (si no tiene particiones hijas o es disco entero)
+      if (!dev.partitions || !dev.partitions.length) {
+        cards.push(renderDeviceCard(dev));
+      } else {
+        // Mostrar el disco padre como cabecera y las particiones como tarjetas
+        cards.push(`
+          <div style="padding:8px 14px 4px;font-size:11px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase">
+            💿 ${esc(dev.model || dev.name)} — ${esc(dev.size_formatted)}
+          </div>`);
+        dev.partitions.forEach(p => cards.push(renderDeviceCard(p)));
+      }
+
+      return cards.join('');
+    }).join('');
+
+    if (termFmt) {
+      termFmt.innerHTML = `<span class="ok">✓ ${devs.length} dispositivo(s) detectado(s)</span>\n`;
+    }
+  } catch(e) {
+    listEl.innerHTML = `<div style="padding:20px;text-align:center;color:var(--red)">
+      ✗ Error al detectar dispositivos: ${esc(e.message)}
+    </div>`;
+    if (termFmt) termFmt.innerHTML += `<span class="err">✗ ${esc(e.message)}</span>\n`;
+  }
+}
+
+/**
+ * Genera el HTML de una tarjeta de dispositivo o partición.
+ * @param {Object} dev - Objeto dispositivo del backend
+ * @returns {string} HTML de la tarjeta
+ */
+function renderDeviceCard(dev) {
+  const isLocked  = dev.is_system;
+  const isSafe    = dev.safe_to_format;
+  const isMounted = dev.mountpoint && dev.mountpoint !== '';
+  const isRemov   = dev.removable;
+
+  const lockClass = isLocked ? 'locked' : '';
+  const icon = isRemov ? '💾' : (dev.type === 'part' ? '▫' : '🖥');
+
+  const tags = [];
+  if (isLocked)  tags.push(`<span class="device-tag device-tag-sys">🔒 SISTEMA</span>`);
+  if (isRemov)   tags.push(`<span class="device-tag device-tag-usb">USB / SD</span>`);
+  if (dev.type === 'part') tags.push(`<span class="device-tag device-tag-part">Partición</span>`);
+  if (isMounted) tags.push(`<span style="font-size:10px;color:var(--text3)">↳ ${esc(dev.mountpoint)}</span>`);
+  if (dev.fstype) tags.push(`<span style="font-size:10px;color:var(--amber)">${esc(dev.fstype)}</span>`);
+
+  const safeMsg = isLocked
+    ? `<span style="color:var(--red);font-size:10px">Protegido — No se puede formatear</span>`
+    : `<span style="color:var(--green);font-size:10px">✓ Seguro para formatear</span>`;
+
+  const clickAttr = isSafe && !isLocked
+    ? `onclick="selectFormatDevice('${esc(dev.path)}', '${esc(dev.model||dev.name||dev.path)}', '${esc(dev.size_formatted)}')"` : '';
+
+  return `
+  <div class="device-card ${lockClass}" id="devcard-${dev.name}" ${clickAttr}>
+    <div class="device-icon">${icon}</div>
+    <div class="device-info">
+      <div class="device-title">
+        <code style="font-size:12px">${esc(dev.path)}</code>
+        ${dev.label ? `<span style="color:var(--text2);font-size:11px">"${esc(dev.label)}"</span>` : ''}
+      </div>
+      <div class="device-meta">
+        <strong style="color:var(--text)">${esc(dev.size_formatted)}</strong>
+        ${tags.join('')}
+      </div>
+      <div style="margin-top:4px">${safeMsg}</div>
+    </div>
+    <div style="flex-shrink:0">${isLocked ? '🔒' : (isSafe ? '▶' : '')}</div>
+  </div>`;
+}
+
+/**
+ * Selecciona un dispositivo para formatear.
+ * Actualiza la UI y habilita el botón de formatear.
+ * @param {string} path    - Ruta del dispositivo (/dev/sdX)
+ * @param {string} name    - Nombre o modelo del dispositivo
+ * @param {string} details - Tamaño del dispositivo
+ */
+function selectFormatDevice(path, name, details) {
+  _selectedFormatDevice = { path, name, details };
+
+  // Quitar selección anterior
+  document.querySelectorAll('.device-card.selected').forEach(c => c.classList.remove('selected'));
+  // Marcar nueva selección
+  const card = document.getElementById('devcard-' + path.replace('/dev/', ''));
+  if (card) card.classList.add('selected');
+  // Buscar la tarjeta por ruta en el texto
+  document.querySelectorAll('.device-card').forEach(c => {
+    if (c.querySelector('code')?.textContent?.trim() === path) {
+      c.classList.add('selected');
+    }
+  });
+
+  // Habilitar botón de formatear y actualizar resumen
+  const btn = document.getElementById('btn-start-format');
+  if (btn) btn.disabled = false;
+
+  const summary = document.getElementById('format-target-summary');
+  if (summary) {
+    summary.innerHTML = `<span style="color:var(--accent)">Unidad: <strong>${esc(path)}</strong></span>
+      <span style="margin-left:12px;color:var(--text2)">${esc(name)} — ${esc(details)}</span>`;
+  }
+
+  const termFmt = document.getElementById('term-format');
+  if (termFmt) {
+    termFmt.innerHTML += `<span class="info">Dispositivo seleccionado: ${esc(path)} (${esc(name)} — ${esc(details)})</span>\n`;
+    termFmt.scrollTop = termFmt.scrollHeight;
+  }
+}
+
+/**
+ * Alterna la selección de tipo de sistema de archivos (FAT32 / WBFS).
+ * @param {string} type - 'fat32' | 'wbfs'
+ */
+function selectFormatType(type) {
+  _selectedFormatType = type;
+
+  // Actualizar clases activas en las opciones
+  document.getElementById('opt-fat32')?.classList.toggle('active', type === 'fat32');
+  document.getElementById('opt-wbfs')?.classList.toggle('active', type === 'wbfs');
+  document.getElementById('radio-fat32').checked = type === 'fat32';
+  document.getElementById('radio-wbfs').checked  = type === 'wbfs';
+
+  // Mostrar/ocultar opciones específicas de FAT32
+  const fat32opts = document.getElementById('fat32-options');
+  if (fat32opts) fat32opts.style.display = type === 'fat32' ? '' : 'none';
+
+  const nintLabel = document.getElementById('format-nintendont-label');
+  if (nintLabel) nintLabel.style.display = type === 'fat32' ? '' : 'none';
+}
+
+/**
+ * Nintendont se instala en /apps/, que solo se crea si "Crear carpetas" está
+ * activo — si se desmarca, deshabilita y desmarca la opción de Nintendont.
+ */
+function updateFormatNintendontAvailability() {
+  const foldersChecked = document.getElementById('format-create-folders')?.checked;
+  const nintCheckbox   = document.getElementById('format-install-nintendont');
+  if (!nintCheckbox) return;
+  nintCheckbox.disabled = !foldersChecked;
+  if (!foldersChecked) nintCheckbox.checked = false;
+}
+
+/**
+ * Abre el modal de confirmación de formateo pre-rellenado con los datos
+ * del dispositivo seleccionado.
+ */
+function openFormatConfirmModal() {
+  if (!_selectedFormatDevice) {
+    alert('Selecciona primero una unidad para formatear.');
+    return;
+  }
+
+  const { path, name, details } = _selectedFormatDevice;
+  const fsType  = _selectedFormatType === 'wbfs' ? 'WBFS Puro (wwt FORMAT)' : 'FAT32 (32 KB cluster, con estructura WiiFlow)';
+  const label   = document.getElementById('format-label')?.value || 'WII';
+  const folders = document.getElementById('format-create-folders')?.checked;
+  const nint    = _selectedFormatType === 'fat32' && folders && document.getElementById('format-install-nintendont')?.checked;
+
+  document.getElementById('confirm-format-dev-name').textContent    = `Dispositivo: ${path}`;
+  document.getElementById('confirm-format-dev-details').textContent = `${name} — ${details}`;
+  document.getElementById('confirm-format-fs-details').textContent  =
+    `Formato: ${fsType}${_selectedFormatType === 'fat32' ? `  |  Etiqueta: ${label}  |  Carpetas: ${folders ? 'Sí (/wbfs, /games, /apps, /wiiflow)' : 'No'}  |  Nintendont: ${nint ? 'Sí, se descargará' : 'No'}` : ''}`;
+
+  openModal('modal-confirm-format');
+}
+
+/**
+ * Ejecuta el formateo del dispositivo seleccionado llamando a POST /api/format.
+ * Muestra el progreso en el terminal de la vista Formatear.
+ */
+async function executeFormat() {
+  if (!_selectedFormatDevice) return;
+  closeModal('modal-confirm-format');
+
+  const { path } = _selectedFormatDevice;
+  const label             = document.getElementById('format-label')?.value || 'WII';
+  const createFolders     = document.getElementById('format-create-folders')?.checked ?? true;
+  const installNintendont = _selectedFormatType === 'fat32' && createFolders
+    && (document.getElementById('format-install-nintendont')?.checked ?? false);
+  const termFmt        = document.getElementById('term-format');
+
+  if (termFmt) {
+    termFmt.innerHTML  = `<span class="info">⚡ Iniciando formateo de ${esc(path)} como ${_selectedFormatType.toUpperCase()}…</span>\n`;
+    termFmt.scrollTop  = termFmt.scrollHeight;
+  }
+
+  // Deshabilitar botón de formatear mientras se procesa
+  const btn = document.getElementById('btn-start-format');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Formateando…'; }
+
+  try {
+    const data = await apiPost('/api/format', {
+      device:              path,
+      fs_type:             _selectedFormatType,
+      label:               label,
+      create_folders:      createFolders,
+      install_nintendont:  installNintendont,
+      confirm:             true
+    });
+
+    if (termFmt) {
+      if (data.success) {
+        termFmt.innerHTML += `<span class="ok">✓ Formateo completado: ${esc(path)} → ${esc(data.fs_type||_selectedFormatType.toUpperCase())}</span>\n`;
+        if (data.folders_created?.length) {
+          termFmt.innerHTML += `<span class="ok">✓ Carpetas creadas: ${esc(data.folders_created.join(', '))}</span>\n`;
+        }
+        if (data.nintendont) {
+          if (data.nintendont.success) {
+            termFmt.innerHTML += `<span class="ok">✓ Nintendont ${esc(data.nintendont.version||'')} instalado en ${esc(data.nintendont.path||'')}</span>\n`;
+          } else {
+            termFmt.innerHTML += `<span class="err">⚠ Nintendont no se pudo instalar: ${esc(data.nintendont.error||'error desconocido')}</span>\n`;
+          }
+        }
+        if (data.log) {
+          termFmt.innerHTML += `<span class="cmd">── Log de comandos ──</span>\n${esc(data.log)}\n`;
+        }
+      } else {
+        termFmt.innerHTML += `<span class="err">✗ Error: ${esc(data.error || data.stderr || 'Error desconocido')}</span>\n`;
+        if (data.cmd)    termFmt.innerHTML += `<span class="cmd">$ ${esc(data.cmd)}</span>\n`;
+        if (data.stdout) termFmt.innerHTML += esc(data.stdout) + '\n';
+      }
+      termFmt.scrollTop = termFmt.scrollHeight;
+    }
+  } catch(e) {
+    if (termFmt) {
+      termFmt.innerHTML += `<span class="err">✗ Error de conexión: ${esc(e.message)}</span>\n`;
+      termFmt.scrollTop = termFmt.scrollHeight;
+    }
+  } finally {
+    if (btn) {
+      btn.disabled    = false;
+      btn.textContent = '⚡ Formatear y preparar unidad seleccionada';
+    }
+    // Recargar lista de dispositivos para reflejar el nuevo estado
+    await loadFormatDevices();
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  24. HELPERS ADICIONALES
+// ═══════════════════════════════════════════════
+
+/**
+ * Abre el explorador de directorios para elegir la ruta del dispositivo
+ * en el sidebar (campo #device-path).
+ */
+async function browseDevicePath() {
+  try {
+    const data = await apiGet('/api/browse', { type: 'dir' });
+    if (data.error) {
+      const val = prompt('Ruta del dispositivo o punto de montaje:', document.getElementById('device-path').value || '/media/');
+      if (val) document.getElementById('device-path').value = val;
+    } else if (data.path) {
+      document.getElementById('device-path').value = data.path;
+    }
+  } catch(e) {
+    const val = prompt('Ruta del dispositivo o punto de montaje:', document.getElementById('device-path').value || '/media/');
+    if (val) document.getElementById('device-path').value = val;
+  }
+}
+
+/**
+ * Muestra un aviso en el terminal principal (para mensajes de advertencia).
+ * @param {string} msg - Mensaje de texto
+ */
+function warn(msg) {
+  term(`<span class="info">⚠ ${esc(msg)}</span>`);
+}
+
 </script>
 </body>
 </html>

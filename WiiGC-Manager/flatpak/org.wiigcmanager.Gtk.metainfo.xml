@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.wiigcmanager.Gtk</id>
+  <name>WiiGC Manager</name>
+  <summary>Gestiona juegos de Wii y GameCube en unidades USB/SD</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <developer id="io.github.vjorgemol">
+    <name>Víctor Jorge Molina</name>
+  </developer>
+  <url type="homepage">https://github.com/vjorgemol/wii-manager</url>
+  <url type="bugtracker">https://github.com/vjorgemol/wii-manager/issues</url>
+  <launchable type="desktop-id">org.wiigcmanager.Gtk.desktop</launchable>
+  <description>
+    <p>Videoteca de juegos de Wii y GameCube para unidades USB/SD: añadir, eliminar, convertir y
+    verificar imágenes, preparar la unidad para WiiFlow/Nintendont y descargar carátulas de GameTDB.</p>
+    <p>Necesita wit y wwt (Wiimms ISO Tools) instalados en el sistema; para imágenes RVZ/GCZ, también Dolphin.</p>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Videoteca con la carátula y los datos del juego seleccionado</caption>
+      <image type="source" width="1180" height="760">https://raw.githubusercontent.com/vjorgemol/wii-manager/main/WiiGC-Manager/flatpak/screenshots/videoteca.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Conversión entre ISO y WBFS</caption>
+      <image type="source" width="1180" height="760">https://raw.githubusercontent.com/vjorgemol/wii-manager/main/WiiGC-Manager/flatpak/screenshots/convertir.png</image>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release version="1.0.0" date="2026-10-03">
+      <description>
+        <p>Primera versión de la app nativa GTK4/libadwaita.</p>
+      </description>
+    </release>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=WiiGC Manager
+Comment=Gestiona juegos de Wii y GameCube en unidades USB/SD
+Comment[en]=Manage Wii and GameCube games on USB/SD drives
+Exec=wiigc-manager
+Icon=org.wiigcmanager.Gtk
+Terminal=false
+Categories=Utility;Game;GTK;
+StartupNotify=true

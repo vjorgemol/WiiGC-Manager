@@ -55,7 +55,8 @@ stop_server() {
         # Esperar hasta 5s a que el proceso termine
         local i=0
         while kill -0 "$pid" 2>/dev/null && (( i < 10 )); do
-            sleep 0.5; (( i++ ))
+            sleep 0.5
+            (( i += 1 ))
         done
         kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null || true
         rm -f "$PID_FILE"
@@ -134,6 +135,7 @@ start_server() {
     info "Arrancando servidor backend…"
     "$PYTHON" -u "$SERVER_FILE" >> "$LOG_FILE" 2>&1 &
     local pid=$!
+    disown "$pid" 2>/dev/null || true
     echo "$pid" > "$PID_FILE"
 
     # Esperar a que el servidor acepte conexiones (máximo 15s)
@@ -146,7 +148,7 @@ start_server() {
             return 0
         fi
         sleep 0.5
-        (( i++ ))
+        (( i += 1 ))
     done
 
     err "El servidor no respondió en 15 segundos"
@@ -182,6 +184,19 @@ case "${1:-}" in
         stop_server
         exit 0
         ;;
+    --start)
+        check_requirements
+        if server_running; then
+            ok "El servidor ya está corriendo (PID $(server_pid))"
+        else
+            start_server
+        fi
+        open_browser
+        echo ""
+        info "Log del servidor: $LOG_FILE"
+        info "Para detener:     $0 --stop"
+        exit 0
+        ;;
     --restart)
         stop_server
         sleep 0.5
@@ -213,7 +228,7 @@ case "${1:-}" in
         fi
         ;;
     *)
-        echo "Uso: $0 [--stop | --restart | --status | --log]"
+        echo "Uso: $0 [--start | --stop | --restart | --status | --log]"
         exit 1
         ;;
 esac
