@@ -27,6 +27,13 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.2.2" date="2026-10-04">
+      <description>
+        <ul>
+          <li>Migrar y «Copiar a…» vuelven a funcionar con particiones WBFS en la versión Flatpak, que antes las rechazaba con «No existe /dev/…».</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.1" date="2026-10-04">
       <description>
         <ul>

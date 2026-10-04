@@ -46,6 +46,13 @@ def volumes(devices):
     return found
 
 
+def _exists(part):
+    """Como os.path.exists(), pero válido dentro del Flatpak, cuyo /dev propio no tiene los discos del sistema."""
+    if os.path.exists(part):
+        return True
+    return core.IN_FLATPAK and core.run(f'test -e {shlex.quote(part)}')[2] == 0
+
+
 def _tools():
     """Rutas de (wit, wwt); si no se encuentran, su nombre a secas."""
     return core.which('wit') or 'wit', core.which('wwt') or 'wwt'
@@ -102,7 +109,7 @@ def plan(src, dst, only=None):
     """
     wit, wwt = _tools()
     for part in (src, dst):
-        if not os.path.exists(part):
+        if not _exists(part):
             raise OSError(f'No existe {part}')
     if os.path.realpath(src) == os.path.realpath(dst):
         raise OSError('El origen y el destino son la misma unidad')
