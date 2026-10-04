@@ -594,6 +594,36 @@ def dolphin_tool(read_dir=None, write_dir=None):
     return None
 
 
+def dolphin_emu(read_dir=None):
+    """
+    Prefijo del comando del emulador Dolphin, o None si no está instalado.
+    Como en dolphin_tool(), al Flatpak hay que darle acceso a la carpeta del juego.
+    """
+    if which('dolphin-emu'):
+        return 'dolphin-emu'
+    if which('flatpak') and run(f'flatpak info {DOLPHIN_FLATPAK}')[2] == 0:
+        access = f" --filesystem={shlex.quote(str(read_dir) + ':ro')}" if read_dir else ''
+        return f'flatpak run{access} {DOLPHIN_FLATPAK}'
+    return None
+
+
+def launch_in_dolphin(image_path):
+    """
+    Abre una imagen de juego en Dolphin y vuelve enseguida, sin esperar a que
+    se cierre. Devuelve None, o el texto del error si no se ha podido lanzar.
+    """
+    p = Path(image_path)
+    if is_device_path(str(p)) or not p.is_file():
+        return f'No se encuentra la imagen del juego: {image_path}'
+    emu = dolphin_emu(read_dir=p.parent)
+    if not emu:
+        return 'Dolphin no está instalado: instálalo desde Software o con «flatpak install org.DolphinEmu.dolphin-emu».'
+    # -b: Dolphin se cierra al terminar la partida. setsid -f lo desliga de la
+    # app, para que siga abierto aunque esta se cierre.
+    _stdout, stderr, rc = run(f'setsid -f {emu} -b -e {shlex.quote(str(p))} > /dev/null 2>&1 < /dev/null')
+    return None if rc == 0 else (stderr.strip() or f'No se pudo lanzar Dolphin (código {rc})')
+
+
 def inspect_dolphin_image(file_path):
     """
     Metadatos de una imagen RVZ/GCZ leídos con 'dolphin-tool header' (sin convertirla).

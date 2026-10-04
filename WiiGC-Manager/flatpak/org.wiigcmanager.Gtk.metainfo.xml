@@ -27,6 +27,27 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.7.1" date="2026-10-04">
+      <description>
+        <ul>
+          <li>Banner animado: los logotipos que el juego guarda en dos imágenes (color y silueta) ya no aparecen sobre un recuadro negro.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.7.0" date="2026-10-04">
+      <description>
+        <ul>
+          <li>Nuevo tipo de carátula «Banner animado (Wii)»: muestra la animación del juego en el menú de la consola, leída del propio juego. Es una reproducción aproximada; los juegos de GameCube siguen con la carátula de GameTDB.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.6.0" date="2026-10-04">
+      <description>
+        <ul>
+          <li>Doble clic (o Intro) sobre un juego lo abre en el emulador Dolphin, si está instalado, tras pedir confirmación. Solo con unidades montadas: Dolphin no lee particiones WBFS.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.5.1" date="2026-10-04">
       <description>
         <ul>

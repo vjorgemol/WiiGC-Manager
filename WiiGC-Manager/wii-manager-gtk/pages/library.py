@@ -24,7 +24,9 @@ import gametdb
 import migrate
 from sound_player import SoundPlayer
 from backend import core, run_async
+from widgets.banner_paintable import BannerPaintable
 from widgets.spinning_paintable import SpinningPaintable
+import wii_banner
 
 # Giro de la carátula de tipo «Disco»: una vuelta cada 4 segundos
 SPIN_DEGREES_PER_SECOND = 90
@@ -102,7 +104,9 @@ class LibraryPage(Gtk.Box):
         self._busy = False  # hay una operación de añadir/copiar/eliminar en curso
         self._copy_cancel = None  # threading.Event de la copia a otra unidad (o extracción al PC) en curso
         self._covers = {}  # id → Gdk.Texture (o None si GameTDB no tiene carátula)
-        self._spin_tick = 0         # tick callback del giro de la carátula de tipo «Disco»
+        self._spin_tick = 0         # tick callback de la carátula animada (disco que gira o banner)
+        self._banner = None         # (ID, wii_banner.Banner) del último banner animado cargado
+        self._no_banner = set()     # IDs de juegos cuyo banner no se ha podido leer
         self._sound_enabled = sound_enabled
         self._on_sound_toggled = on_sound_toggled
         self._get_gc_sound = get_gc_sound  # archivo de audio elegido en Ajustes para los juegos de GameCube
@@ -370,6 +374,9 @@ class LibraryPage(Gtk.Box):
         self._selection.connect('selection-changed', lambda *_: self._on_selection_changed())
         self._column_view.set_model(self._selection)
 
+        # Doble clic (o Intro) sobre un juego: abrirlo en Dolphin
+        self._column_view.connect('activate', self._on_row_activated)
+
         keys = Gtk.EventControllerKey()
         keys.connect('key-pressed', self._on_table_key_pressed)
         self._column_view.add_controller(keys)
@@ -506,6 +513,52 @@ class LibraryPage(Gtk.Box):
         if len(items) > limit:
             lines.append(f'… y {len(items) - limit} más')
         return '\n'.join(lines)
+
+    # ── Jugar en Dolphin (doble clic) ────────────────────────────
+    def _on_row_activated(self, _view, position):
+        """Doble clic o Intro sobre un juego: pregunta y lo abre en el emulador Dolphin, si está instalado."""
+        item = self._selection.get_item(position)
+        if item is None or self._busy:
+            return
+        game = item.game
+        path = game.get('path') or ''
+        if not path or core.is_device_path(path) or not core.is_mounted_dir(self._current_path):
+            # Dolphin abre archivos de imagen, no juegos de dentro de una partición WBFS
+            self._report(f"✗ {game.get('title', '?')} está en una partición WBFS, que Dolphin no puede leer: "
+                         'extráelo antes al PC con «Extraer…».', 'err')
+            return
+
+        def on_checked(emu):
+            if not emu:
+                self._report('✗ Para jugar con doble clic hace falta el emulador Dolphin, y no está instalado.', 'err')
+                return
+            dialog = Adw.AlertDialog(
+                heading='¿Abrir el juego en Dolphin?',
+                body=f"{game.get('title', '?')} [{game.get('id', '?')}] · {item.platform}\n\n"
+                     'Se abrirá en el emulador Dolphin, leyendo el juego directamente de la unidad: '
+                     'no la desconectes mientras juegas.')
+            dialog.add_response('cancel', 'Cancelar')
+            dialog.add_response('play', 'Jugar')
+            dialog.set_response_appearance('play', Adw.ResponseAppearance.SUGGESTED)
+            dialog.set_default_response('play')
+            dialog.set_close_response('cancel')
+            dialog.connect('response', lambda _d, response: response == 'play' and self._launch_in_dolphin(game))
+            dialog.present(self.get_root())
+
+        run_async(core.dolphin_emu, on_done=on_checked, on_error=lambda e: self._report(f'✗ {e}', 'err'))
+
+    def _launch_in_dolphin(self, game):
+        self._stop_sound()
+        name = f"{game.get('title', '?')} [{game.get('id', '?')}]"
+
+        def on_done(error):
+            if error:
+                self._report(f'✗ No se pudo abrir {name} en Dolphin: {error}', 'err')
+            else:
+                self._log.append(f'✓ {name} abierto en Dolphin', 'ok')
+
+        run_async(core.launch_in_dolphin, game['path'], on_done=on_done,
+                  on_error=lambda e: self._report(f'✗ {e}', 'err'))
 
     # ── Eliminar juegos ──────────────────────────────────────────
     def _on_table_key_pressed(self, _controller, keyval, _keycode, _state):
@@ -782,18 +835,31 @@ class LibraryPage(Gtk.Box):
     def _show_cover(self, game):
         """Muestra la carátula del juego: la que ya está en memoria o, si no, la pide en un hilo."""
         game_id = game.get('id')
+        if self._wants_banner(game):
+            if self._banner and self._banner[0] == game_id:
+                self._set_banner(self._banner[1])
+                return
+            self._stop_spin()
+            self._cover.set_visible(False)
+            self._cover_status.set_label('Cargando banner…')
+            part = self._current_path
+            run_async(lambda: wii_banner.load(banner_sound.banner_bytes(game, part)),
+                      on_done=lambda banner: self._on_banner_loaded(game, banner),
+                      on_error=lambda _e: self._on_banner_loaded(game, None))
+            return
         if game_id in self._covers:
             self._set_cover(self._covers[game_id])
             return
+        self._stop_spin()
         self._cover.set_visible(False)
         self._cover_status.set_label('Cargando carátula…')
-        region, cover_type = self._get_cover_prefs()
+        region, cover_type = self._cover_prefs()
         run_async(cover_loader.fetch_cover, game_id, game.get('platform') == 'gc', region, cover_type,
                   on_done=lambda data: self._on_cover_fetched(game_id, data, (region, cover_type)),
                   on_error=lambda e: self._on_cover_error(game, e))
 
     def _on_cover_fetched(self, game_id, data, prefs):
-        if prefs != self._get_cover_prefs():
+        if prefs != self._cover_prefs():
             return  # se pidió con una región/tipo que ya no es el elegido en Ajustes
         texture = None
         if data:
@@ -815,6 +881,48 @@ class LibraryPage(Gtk.Box):
         if item and item.game.get('id') == game.get('id'):
             self._cover.set_visible(False)
             self._cover_status.set_label('No se pudo descargar\nla carátula')
+
+    # ── Banner animado (tipo de carátula «Banner animado») ────────
+    def _cover_prefs(self):
+        """(región, tipo) que se piden a GameTDB: con «Banner animado», la carátula 3D hace de reserva."""
+        region, cover_type = self._get_cover_prefs()
+        return region, 'cover3D' if cover_type == 'banner' else cover_type
+
+    def _wants_banner(self, game):
+        """True si toca mostrar el banner animado: elegido en Ajustes, juego de Wii y aún no ha fallado."""
+        return (self._get_cover_prefs()[1] == 'banner' and game.get('platform') != 'gc'
+                and bool(self._current_path) and not self._busy and game.get('id') not in self._no_banner)
+
+    def _on_banner_loaded(self, game, banner):
+        game_id = game.get('id')
+        if banner is None:
+            self._no_banner.add(game_id)
+        else:
+            self._banner = (game_id, banner)
+        item = self._single_selected()
+        if item and item.game.get('id') == game_id:
+            self._show_cover(item.game)     # el banner, o la carátula de GameTDB si no se pudo leer
+
+    def _set_banner(self, banner):
+        self._stop_spin()
+        paintable = BannerPaintable(banner)
+        self._cover.set_paintable(paintable)
+        self._cover.set_visible(True)
+        self._cover_status.set_label('')
+        if not self._cover.get_settings().get_property('gtk-enable-animations'):
+            paintable.set_time(banner.start.frames / wii_banner.FPS if banner.start else 0)
+            return
+        start = None
+
+        def on_tick(_widget, clock):
+            nonlocal start
+            now = clock.get_frame_time()  # microsegundos
+            if start is None:
+                start = now
+            paintable.set_time((now - start) / 1e6)
+            return GLib.SOURCE_CONTINUE
+
+        self._spin_tick = self._cover.add_tick_callback(on_tick)
 
     def reload_cover(self):
         """Al cambiar región/tipo de carátula en Ajustes: descartar las ya descargadas."""

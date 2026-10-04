@@ -95,7 +95,7 @@
 
 <nav>
   <div class="brand">WiiGC Manager</div>
-  <div class="version">Manual de uso · versión 1.5.1</div>
+  <div class="version">Manual de uso · versión 1.7.1</div>
   <ol>
     <li><a href="#instalacion">Requisitos e instalación</a></li>
     <li><a href="#primeros-pasos">Primeros pasos</a></li>
@@ -116,7 +116,7 @@
 
 <h1>WiiGC Manager — Manual de uso</h1>
 <p class="lead">WiiGC Manager gestiona la colección de juegos de <strong>Wii</strong> y <strong>GameCube</strong> de una unidad USB o tarjeta SD: los añade, elimina, convierte, verifica y copia a otra unidad, y prepara la unidad para usarla en la consola con WiiFlow, USB Loader GX y Nintendont.</p>
-<p>Este manual describe la aplicación de escritorio (GTK4, versión 1.5.1). La versión web original, que comparte el mismo motor, se resume <a href="#web">al final</a>.</p>
+<p>Este manual describe la aplicación de escritorio (GTK4, versión 1.7.1). La versión web original, que comparte el mismo motor, se resume <a href="#web">al final</a>.</p>
 
 <figure>
   <img src="WiiGC-Manager/flatpak/screenshots/videoteca.png" alt="Ventana de WiiGC Manager en la vista Videoteca">
@@ -251,6 +251,14 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
   <li><strong>Cancelar</strong> detiene la extracción y descarta el juego que estaba a medias; los ya extraídos se conservan.</li>
 </ul>
 
+<h3>Jugar en Dolphin</h3>
+<p><strong>Doble clic</strong> sobre un juego (o <strong>Intro</strong>) lo abre en el emulador Dolphin, tras pedir confirmación. Hace falta tener Dolphin instalado, del sistema o como Flatpak.</p>
+<ul>
+  <li>Dolphin lee el juego directamente de la unidad: no la desconectes mientras juegas.</li>
+  <li>Solo funciona con unidades montadas (FAT32/NTFS). Dolphin no puede leer una partición WBFS: extrae antes el juego al PC con <strong>Extraer…</strong>.</li>
+  <li>Dolphin se cierra solo al terminar la partida y sigue abierto aunque cierres la app.</li>
+</ul>
+
 <h3>Sonido del juego</h3>
 <p>Al seleccionar un juego de Wii suena su banner: el sonido que se oye en el menú de la consola al elegir el disco. El botón del altavoz, arriba en el panel del juego, lo activa o lo desactiva, y la app recuerda la elección.</p>
 <ul>
@@ -262,6 +270,13 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
 <h3>Carátulas</h3>
 <p>La carátula se descarga de GameTDB al seleccionar el juego, con la región y el tipo elegidos en Ajustes. Si no existe esa combinación, la app prueba con otras regiones y tipos.</p>
 <p>Con el tipo <strong>Disco</strong>, la imagen del disco gira mientras el juego está seleccionado (salvo que el sistema tenga las animaciones desactivadas).</p>
+<p>Con el tipo <strong>Banner animado (Wii)</strong>, en lugar de una carátula de GameTDB se muestra la animación que tiene el juego en el menú de la consola, leída del propio juego (y guardada en <code>~/.cache/wii-manager-gtk/banners/</code>).</p>
+<ul>
+  <li>Es una reproducción aproximada: se dibujan las imágenes con su movimiento, color y transparencia, pero no los textos ni algunos efectos, así que en ciertos juegos puede verse incompleta o con algún recuadro de más.</li>
+  <li>Los logotipos traducidos se muestran en español si el juego lo trae y, si no, en inglés.</li>
+  <li>Los juegos de GameCube no tienen banner animado: se muestra la carátula 3D de GameTDB, que también hace de reserva si el banner no se puede leer.</li>
+  <li>El banner no se puede guardar ni imprimir con doble clic.</li>
+</ul>
 <p><strong>Doble clic en la carátula</strong> permite:</p>
 <ul>
   <li><strong>Guardar…</strong>: la guarda como PNG.</li>
@@ -368,7 +383,7 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
   <tr><td><strong>Ruta de wit / Ruta de wwt</strong></td><td><strong>Detectar</strong> muestra dónde están instaladas. La app localiza las herramientas en el <code>PATH</code> por su cuenta, así que sirve para comprobar que están disponibles.</td></tr>
   <tr><td><strong>Ruta WFS / USB</strong></td><td>Unidad que aparece en el panel lateral al abrir la app.</td></tr>
   <tr><td><strong>Región preferida</strong></td><td>Región de la carátula que se pide primero.</td></tr>
-  <tr><td><strong>Tipo de carátula</strong></td><td>3D, plana, disco o completa.</td></tr>
+  <tr><td><strong>Tipo de carátula</strong></td><td>3D, plana, disco, completa o banner animado (solo Wii).</td></tr>
   <tr><td><strong>Sonido de arranque de GameCube</strong></td><td>Archivo de audio que suena al seleccionar un juego de GameCube. La app no lo incluye: hay que elegir uno propio.</td></tr>
 </table></div>
 <p>Las rutas se guardan con <strong>Guardar</strong>. La región, el tipo de carátula y el sonido de GameCube se aplican al cambiarlos.</p>

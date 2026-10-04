@@ -3,13 +3,16 @@ Sonido del banner de un juego de Wii: el que suena en el menú de la consola al
 elegir el disco. Está en opening.bnr (raíz del disco), un archivo U8 que lleva
 dentro meta/sound.bin: audio BNS (ADPCM de Nintendo), WAV o AIFF, a veces
 comprimido con LZ77. Se convierte a WAV y se guarda en
-~/.cache/wii-manager-gtk/banners/<ID>.wav para no repetir el trabajo.
+~/.cache/wii-manager-gtk/banners/<ID>.wav para no repetir el trabajo; el propio
+opening.bnr se guarda también (<ID>.bnr), porque de él sale además el banner
+animado (wii_banner.py).
 
 Los juegos de GameCube no tienen sonido de banner.
 """
 import shlex
 import shutil
 import struct
+import threading
 from pathlib import Path
 
 from backend import core
@@ -17,6 +20,7 @@ from backend import core
 _CACHE_DIR = Path.home() / '.cache' / 'wii-manager-gtk' / 'banners'
 _MAX_SECONDS = 30           # por si algún banner trae una pista larga
 _U8_MAGIC = b'\x55\xaa\x38\x2d'
+_lock = threading.Lock()    # el sonido y el banner animado piden el mismo archivo a la vez
 
 
 def wav_path(game, part):
@@ -37,7 +41,7 @@ def wav_path(game, part):
     _CACHE_DIR.mkdir(parents=True, exist_ok=True)
     wav = None
     try:
-        banner = _read_banner(game, part)
+        banner = banner_bytes(game, part)
     except OSError:
         return None  # unidad retirada u ocupada: no dejar marca, se reintentará
     try:
@@ -49,6 +53,21 @@ def wav_path(game, part):
         return None
     target.write_bytes(wav)
     return str(target)
+
+
+def banner_bytes(game, part):
+    """
+    Contenido del opening.bnr de un juego de Wii: de la caché (<ID>.bnr) o,
+    si no está, leído del juego (bloqueante). Lanza OSError si no se puede leer.
+    """
+    cached = _CACHE_DIR / f"{game['id']}.bnr"
+    with _lock:
+        if cached.is_file():
+            return cached.read_bytes()
+        _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        banner = _read_banner(game, part)
+        cached.write_bytes(banner)
+        return banner
 
 
 def _read_banner(game, part):

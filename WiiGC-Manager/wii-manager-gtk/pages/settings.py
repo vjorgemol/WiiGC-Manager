@@ -18,8 +18,9 @@ from widgets.path_row import PathRow
 COVER_REGIONS = ['ES', 'EN', 'DE', 'FR', 'IT', 'PT', 'US', 'JA']
 COVER_REGION_LABELS = ['España (ES)', 'English (EN)', 'Deutschland (DE)', 'France (FR)',
                         'Italia (IT)', 'Portugal (PT)', 'USA (US)', 'Japan (JA)']
-COVER_TYPES = ['cover3D', 'cover', 'disc', 'coverfull']
-COVER_TYPE_LABELS = ['3D Cover', 'Cover plano', 'Disco', 'Cover completo']
+# 'banner' no es de GameTDB: es el banner animado, que se lee del propio juego de Wii
+COVER_TYPES = ['cover3D', 'cover', 'disc', 'coverfull', 'banner']
+COVER_TYPE_LABELS = ['3D Cover', 'Cover plano', 'Disco', 'Cover completo', 'Banner animado (Wii)']
 
 
 class SettingsPage(Gtk.Box):
