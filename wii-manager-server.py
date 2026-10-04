@@ -2,7 +2,7 @@
 """
 wii-manager-server.py
 =====================
-Servidor HTTP local que actúa como backend de la GUI WiiFlow Manager.
+Servidor HTTP local que actúa como backend de la GUI WiiGC-Manager.
 
 Expone una API REST minimalista en http://localhost:8765 que traduce las
 peticiones del frontend en llamadas reales a los ejecutables `wit` y `wwt`
@@ -1347,7 +1347,7 @@ def fetch_nintendont_latest():
     base = f'https://raw.githubusercontent.com/{NINTENDONT_REPO}/{NINTENDONT_BRANCH}'
     urls = {local_name: f'{base}/{repo_path}' for local_name, repo_path in NINTENDONT_RAW_FILES.items()}
     try:
-        req = urllib.request.Request(urls['boot.dol'], method='HEAD', headers={'User-Agent': 'WiiFlowManager/1.0'})
+        req = urllib.request.Request(urls['boot.dol'], method='HEAD', headers={'User-Agent': 'WiiGC-Manager/1.0'})
         with urllib.request.urlopen(req, timeout=15) as resp:
             etag = (resp.headers.get('ETag') or '').strip('W/"')
     except Exception as e:
@@ -1388,7 +1388,7 @@ def install_nintendont(base_path):
         try:
             req = urllib.request.Request(
                 url,
-                headers={'User-Agent': 'WiiFlowManager/1.0'}
+                headers={'User-Agent': 'WiiGC-Manager/1.0'}
             )
             with urllib.request.urlopen(req, timeout=60) as resp, open(dest, 'wb') as f:
                 while True:
@@ -1488,7 +1488,7 @@ def _latest_tag(key):
     """
     req = urllib.request.Request(
         f"https://github.com/{LOADERS[key]['repo']}/releases/latest",
-        headers={'User-Agent': 'WiiFlowManager/1.0'})
+        headers={'User-Agent': 'WiiGC-Manager/1.0'})
     with urllib.request.urlopen(req, timeout=15) as resp:
         final_url = resp.geturl()
     if '/releases/tag/' not in final_url:
@@ -1600,7 +1600,7 @@ def install_loader(key, base_path):
     try:
         tag = _latest_tag(key)
         url = f"https://github.com/{loader['repo']}/releases/download/{tag}/{loader['asset'](tag)}"
-        req = urllib.request.Request(url, headers={'User-Agent': 'WiiFlowManager/1.0'})
+        req = urllib.request.Request(url, headers={'User-Agent': 'WiiGC-Manager/1.0'})
         with urllib.request.urlopen(req, timeout=120) as resp:
             archive = zipfile.ZipFile(io.BytesIO(resp.read()))
 
@@ -1770,7 +1770,7 @@ def _api_format(params):
                     "   - Disco 2 (si aplica): /games/Nombre del Juego [GAMEID]/disc2.iso\n\n"
                     "3. APLICACIONES HOMEBREW:\n"
                     "   - Coloca loaders (WiiFlow, USB Loader GX, Nintendont) en /apps/\n\n"
-                    "Preparado con WiiFlow Manager.\n"
+                    "Preparado con WiiGC-Manager.\n"
                 )
                 try:
                     readme_path.write_text(readme_content, encoding='utf-8')
@@ -2271,7 +2271,7 @@ ROUTES = {
 
 class Handler(http.server.BaseHTTPRequestHandler):
     """
-    Manejador HTTP para el servidor local de WiiFlow Manager.
+    Manejador HTTP para el servidor local de WiiGC-Manager.
 
     Gestiona tres tipos de peticiones:
         - GET  /api/*  → llamada a la API (parámetros en query string)
@@ -2392,7 +2392,7 @@ def main():
     - Advertencia si el HTML no se encuentra en el directorio
     """
     print('=' * 54)
-    print('  WiiFlow Manager — Backend')
+    print('  WiiGC-Manager — Backend')
     print(f'  http://localhost:{PORT}')
     print('  Ctrl+C para detener')
     print('=' * 54)

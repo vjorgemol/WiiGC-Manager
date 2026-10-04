@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WiiFlow Manager</title>
+<title>WiiGC-Manager</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -770,7 +770,7 @@
 <header>
   <div class="logo">W</div>
   <div>
-    <h1>WiiFlow Manager <span>/ wit + wwt GUI</span></h1>
+    <h1>WiiGC-Manager <span>/ wit + wwt GUI</span></h1>
   </div>
   <div class="header-right">
     <div id="wit-status" class="tag tag-err" title="Estado de wit">wit: no encontrado</div>
@@ -920,7 +920,7 @@
         <button style="margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;font-size:11px;" onclick="clearTerm()">limpiar</button>
       </div>
       <div class="term-output" id="term">
-<span class="info">WiiFlow Manager — GUI para wit/wwt</span>
+<span class="info">WiiGC-Manager — GUI para wit/wwt</span>
 <span class="info">Linux · Wii Game Manager</span>
 
 Bienvenido. Configura la ruta del WBFS y pulsa "Explorar dispositivo" para empezar.
@@ -1498,7 +1498,7 @@ Los juegos de GameCube se organizan en particiones FAT32 bajo la estructura:
 
 <script>
 /**
- * wii-manager.html — Frontend de WiiFlow Manager
+ * wii-manager.html — Frontend de WiiGC-Manager
  * ================================================
  * Interfaz gráfica web para gestionar juegos Wii en particiones WBFS,
  * apoyándose en el backend wii-manager-server.py que expone una API REST
@@ -2658,7 +2658,7 @@ function loadSettings() {
 // ═══════════════════════════════════════════════
 
 /**
- * Genera y descarga un archivo .desktop para lanzar WiiFlow Manager
+ * Genera y descarga un archivo .desktop para lanzar WiiGC-Manager
  * directamente desde el entorno de escritorio de Linux (GNOME, KDE, XFCE…).
  * El archivo arranca el servidor Python y abre el navegador automáticamente.
  */
@@ -2671,7 +2671,7 @@ function generateLauncher() {
   const content = `[Desktop Entry]
 Version=1.0
 Type=Application
-Name=WiiFlow Manager
+Name=WiiGC-Manager
 Comment=Gestor de juegos Wii (wit/wwt GUI)
 Exec=bash -c "cd '${dir}' && python3 wii-manager-server.py & sleep 1 && xdg-open http://localhost:8765"
 Icon=applications-games
@@ -2689,8 +2689,8 @@ StartupNotify=true
  */
 function generateScript() {
   const content = `#!/bin/bash
-# WiiFlow Manager — Script de bash
-# Generado por WiiFlow Manager GUI
+# WiiGC-Manager — Script de bash
+# Generado por WiiGC-Manager GUI
 WWT="${settings.wwtPath}"
 WIT="${settings.witPath}"
 WFS="${settings.wfsPath}"

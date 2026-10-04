@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# launch.sh — Lanzador de WiiFlow Manager
+# launch.sh — Lanzador de WiiGC-Manager
 #
 # Arranca el servidor backend (wii-manager-server.py) y abre la GUI
 # en el navegador predeterminado del sistema.
@@ -119,7 +119,7 @@ check_requirements() {
 
     if [[ ! -f "$SERVER_FILE" ]]; then
         err "No se encuentra $SERVER_FILE"
-        err "Asegúrate de ejecutar este script desde el directorio de WiiFlow Manager"
+        err "Asegúrate de ejecutar este script desde el directorio de WiiGC-Manager"
         ok=false
     fi
 
@@ -175,7 +175,7 @@ trap cleanup INT TERM
 # ── Punto de entrada ──────────────────────────────────────────────────────────
 
 header "══════════════════════════════════════════"
-header "   WiiFlow Manager"
+header "   WiiGC-Manager"
 header "══════════════════════════════════════════"
 echo ""
 
