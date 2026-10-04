@@ -51,10 +51,18 @@ def present(parent):
         issue_url=urls.get('bugtracker', ''))
     if info.findtext('project_license') == 'MIT':
         dialog.set_license_type(Gtk.License.MIT_X11)
-    release = info.find('releases/release')
-    notes = release.find('description') if release is not None else None
-    if notes is not None:
-        # Novedades de la última versión (el diálogo admite <p>, <ul>, <ol> y <li>)
-        dialog.set_release_notes(''.join(ET.tostring(child, encoding='unicode').strip() for child in notes))
-        dialog.set_release_notes_version(release.get('version', ''))
+    # Novedades (el diálogo admite <p>, <ul>, <ol> y <li>): las de la última
+    # versión y, debajo, las de las anteriores encabezadas por su número
+    notes = []
+    releases = info.findall('releases/release')
+    for release in releases:
+        description = release.find('description')
+        if description is None:
+            continue
+        if release is not releases[0]:
+            notes.append(f"<p>Versión {release.get('version', '')}</p>")
+        notes.extend(ET.tostring(child, encoding='unicode').strip() for child in description)
+    if notes:
+        dialog.set_release_notes(''.join(notes))
+        dialog.set_release_notes_version(releases[0].get('version', ''))
     dialog.present(parent)

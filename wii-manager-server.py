@@ -372,6 +372,43 @@ def parse_wwt_space(output):
     return round(used, 2), round(free, 2), round(total, 2)
 
 
+def parse_wwt_sections(output):
+    """
+    Parsea la salida de 'wwt LIST --sections' (bloques [wbfs-N] y [disc-N] con
+    líneas clave=valor), que no cambia de formato entre versiones de wwt como
+    sí lo hacen las tablas de 'wwt LIST --long' y 'wwt SPACE'.
+
+    Devuelve (juegos, (used_gib, free_gib, total_gib)); el espacio es None si
+    la salida no trae el bloque [wbfs-N].
+    """
+    games, space = [], None
+    for kind, block in re.findall(r'^\[(wbfs|disc)-\d+\]\s*$(.*?)(?=^\[|\Z)', output, re.MULTILINE | re.DOTALL):
+        info = dict(line.split('=', 1) for line in block.splitlines() if '=' in line)
+        try:
+            if kind == 'wbfs':
+                space = tuple(round(int(info[k]) / 1024, 2) for k in ('used_mib', 'free_mib', 'total_mib'))
+                continue
+            size = int(info.get('size') or 0)
+        except (KeyError, ValueError):
+            if kind == 'wbfs':
+                continue
+            size = 0
+        game_id = info.get('id', '').strip()
+        if not game_id:
+            continue
+        games.append({
+            'id':     game_id,
+            'title':  (info.get('title') or info.get('name') or game_id).strip(),
+            'size':   round(size / 1024**3, 2),
+            'size_bytes': size,
+            'fmt':    'wbfs',
+            'region': region_from_id(game_id),
+            'year':   0,
+            'platform': 'wii',
+        })
+    return games, space
+
+
 # ══════════════════════════════════════════════════════════════
 #  HANDLERS DE LA API REST
 # ══════════════════════════════════════════════════════════════
@@ -663,6 +700,7 @@ def api_list(params):
     wwt  = params.get('wwt',  which('wwt') or 'wwt')
     wit  = params.get('wit',  which('wit') or 'wit')
     flag = part_flag(part)
+    wbfs_space = None
 
     if is_mounted_dir(part):
         # Unidad montada: los juegos Wii son archivos en /wbfs/
@@ -683,6 +721,13 @@ def api_list(params):
 
         games = parse_wwt_list(stdout)
 
+        # La tabla de --long cambia entre versiones de wwt: si responde, usar
+        # la salida por secciones, que además trae el espacio de la partición
+        if rc == 0:
+            sec_games, wbfs_space = parse_wwt_sections(run(f'{wwt} LIST {flag} --sections')[0])
+            if len(sec_games) >= len(games):
+                games = sec_games
+
     # Si se proporcionó una ruta o partición, comprobar si hay juegos de GameCube
     gc_games = []
     if part:
@@ -694,9 +739,9 @@ def api_list(params):
             pass
 
     # Obtener espacio en disco de la partición
-    cmd_sp = f'{wwt} SPACE {flag}'
+    cmd_sp = f'{wwt} SPACE {flag} --no-colors'
     sp_out, sp_err, _ = run(cmd_sp)
-    used, free, total = parse_wwt_space(sp_out)
+    used, free, total = wbfs_space or parse_wwt_space(sp_out)
 
     # wwt SPACE solo entiende particiones/archivos WBFS. Si la ruta es una
     # unidad montada (FAT32/NTFS con carpetas wbfs/ y games/), wwt falla y
@@ -1112,6 +1157,30 @@ def get_mount_map():
     return mounts
 
 
+def probe_wbfs(paths):
+    """
+    lsblk (libblkid) no reconoce WBFS: una partición WBFS sale sin sistema de
+    archivos. Se identifica por su firma, los 4 primeros bytes ('WBFS').
+
+    Devuelve (wbfs, denied): las rutas que son WBFS y las que no se han podido
+    leer por falta de permisos (hace falta pertenecer al grupo 'disk').
+    """
+    if not paths:
+        return set(), set()
+    devs = ' '.join(shlex.quote(p) for p in paths)
+    stdout, _, _ = run(
+        f'for d in {devs}; do '
+        'if [ ! -r "$d" ]; then echo "denied $d"; '
+        'elif [ "$(head -c 4 "$d" 2>/dev/null | tr -d \'\\0\')" = WBFS ]; then echo "wbfs $d"; fi; '
+        'done', timeout=20)
+    found = {'wbfs': set(), 'denied': set()}
+    for line in stdout.splitlines():
+        kind, _, path = line.partition(' ')
+        if kind in found:
+            found[kind].add(path)
+    return found['wbfs'], found['denied']
+
+
 def get_block_devices():
     """
     Obtiene la lista de dispositivos de bloques del sistema usando lsblk en formato JSON.
@@ -1139,6 +1208,20 @@ def get_block_devices():
                 return True
         return False
 
+    # Volúmenes sin sistema de archivos reconocido ni montaje: pueden ser WBFS
+    candidates = []
+    for dev in data.get('blockdevices', []):
+        if is_node_system(dev):
+            continue
+        for node in dev.get('children') or [dev]:
+            if (node.get('type') in ('disk', 'part') and not node.get('fstype') and not node.get('mountpoint')
+                    and not node.get('children') and node.get('size') and node.get('path')):
+                candidates.append(node['path'])
+    wbfs_paths, denied_paths = probe_wbfs(candidates)
+
+    def fstype_of(node):
+        return node.get('fstype') or ('wbfs' if node.get('path') in wbfs_paths else '')
+
     devices = []
     for dev in data.get('blockdevices', []):
         is_sys = is_node_system(dev)
@@ -1154,7 +1237,8 @@ def get_block_devices():
                 'size_bytes': ch_size,
                 'size_formatted': format_bytes(ch_size),
                 'type': ch.get('type'),
-                'fstype': ch.get('fstype') or '',
+                'fstype': fstype_of(ch),
+                'unreadable': ch.get('path') in denied_paths,
                 'label': ch.get('label') or '',
                 'mountpoint': ch.get('mountpoint') or '',
                 'removable': bool(ch.get('rm', False) or dev.get('rm', False)),
@@ -1168,7 +1252,8 @@ def get_block_devices():
             'size_bytes': raw_size,
             'size_formatted': format_bytes(raw_size),
             'type': dev.get('type'),
-            'fstype': dev.get('fstype') or '',
+            'fstype': fstype_of(dev),
+            'unreadable': dev.get('path') in denied_paths,
             'label': dev.get('label') or '',
             'mountpoint': dev.get('mountpoint') or '',
             'model': (dev.get('model') or '').strip(),

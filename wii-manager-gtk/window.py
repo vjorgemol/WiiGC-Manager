@@ -281,9 +281,16 @@ class MainWindow(Adw.ApplicationWindow):
         paths = [p for p in paths if p]
         name = drive.get('model') or drive.get('path')
         if len(paths) != 1:
+            if paths:
+                reason = 'tiene varias particiones utilizables.'
+            elif any(v.get('unreadable') for v in (drive.get('partitions') or [drive])):
+                # Sin permiso de lectura no se puede saber si es una partición WBFS
+                reason = ('no está montada y no hay permiso para leerla. Si es una partición WBFS, añade tu '
+                          'usuario al grupo «disk» (sudo usermod -aG disk $USER) y vuelve a iniciar sesión.')
+            else:
+                reason = 'no está montada.'
             self.terminal.append(
-                f'⚠ Unidad USB detectada ({name}), pero no se pudo elegir automáticamente: '
-                + ('tiene varias particiones utilizables.' if paths else 'no está montada.'), 'info')
+                f'⚠ Unidad USB detectada ({name}), pero no se pudo elegir automáticamente: {reason}', 'info')
             return
         self.terminal.append(f'Unidad USB detectada: {name} → {paths[0]}', 'info')
         self._usb_auto_path = paths[0]
