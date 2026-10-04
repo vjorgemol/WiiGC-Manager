@@ -16,6 +16,7 @@ DEFAULTS = {
     'cover_type': 'cover3D',
     'show_terminal': False,    # panel inferior con la salida de los comandos
     'banner_sound': True,      # hacer sonar el banner del juego de Wii seleccionado
+    'gc_sound_path': '',       # archivo de audio que suena al seleccionar un juego de GameCube
 }
 
 

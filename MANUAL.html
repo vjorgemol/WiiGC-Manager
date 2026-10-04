@@ -95,7 +95,7 @@
 
 <nav>
   <div class="brand">WiiGC Manager</div>
-  <div class="version">Manual de uso · versión 1.4.0</div>
+  <div class="version">Manual de uso · versión 1.5.1</div>
   <ol>
     <li><a href="#instalacion">Requisitos e instalación</a></li>
     <li><a href="#primeros-pasos">Primeros pasos</a></li>
@@ -116,7 +116,7 @@
 
 <h1>WiiGC Manager — Manual de uso</h1>
 <p class="lead">WiiGC Manager gestiona la colección de juegos de <strong>Wii</strong> y <strong>GameCube</strong> de una unidad USB o tarjeta SD: los añade, elimina, convierte, verifica y copia a otra unidad, y prepara la unidad para usarla en la consola con WiiFlow, USB Loader GX y Nintendont.</p>
-<p>Este manual describe la aplicación de escritorio (GTK4, versión 1.4.0). La versión web original, que comparte el mismo motor, se resume <a href="#web">al final</a>.</p>
+<p>Este manual describe la aplicación de escritorio (GTK4, versión 1.5.1). La versión web original, que comparte el mismo motor, se resume <a href="#web">al final</a>.</p>
 
 <figure>
   <img src="WiiGC-Manager/flatpak/screenshots/videoteca.png" alt="Ventana de WiiGC Manager en la vista Videoteca">
@@ -255,7 +255,7 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
 <p>Al seleccionar un juego de Wii suena su banner: el sonido que se oye en el menú de la consola al elegir el disco. El botón del altavoz, arriba en el panel del juego, lo activa o lo desactiva, y la app recuerda la elección.</p>
 <ul>
   <li>El sonido se lee del propio juego la primera vez y se guarda en <code>~/.cache/wii-manager-gtk/banners/</code>.</li>
-  <li>Los juegos de GameCube no tienen sonido de banner.</li>
+  <li>Los juegos de GameCube no tienen sonido de banner. En su lugar suena el archivo de audio que elijas en <strong>Ajustes → Sonido de arranque de GameCube</strong> (por ejemplo, una grabación del arranque de la consola); la app no incluye ninguno.</li>
   <li>Mientras hay una operación en curso (añadir, copiar, extraer, eliminar) no suena.</li>
 </ul>
 
@@ -369,8 +369,9 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
   <tr><td><strong>Ruta WFS / USB</strong></td><td>Unidad que aparece en el panel lateral al abrir la app.</td></tr>
   <tr><td><strong>Región preferida</strong></td><td>Región de la carátula que se pide primero.</td></tr>
   <tr><td><strong>Tipo de carátula</strong></td><td>3D, plana, disco o completa.</td></tr>
+  <tr><td><strong>Sonido de arranque de GameCube</strong></td><td>Archivo de audio que suena al seleccionar un juego de GameCube. La app no lo incluye: hay que elegir uno propio.</td></tr>
 </table></div>
-<p>Las rutas se guardan con <strong>Guardar</strong>. La región y el tipo de carátula se aplican al cambiarlos.</p>
+<p>Las rutas se guardan con <strong>Guardar</strong>. La región, el tipo de carátula y el sonido de GameCube se aplican al cambiarlos.</p>
 <p>Los ajustes se guardan en <code>~/.config/wii-manager-gtk/settings.json</code>.</p>
 
 <!-- ═══════════════════════════════════════════════════════════ -->

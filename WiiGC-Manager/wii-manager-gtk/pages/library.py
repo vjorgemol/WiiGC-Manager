@@ -22,6 +22,7 @@ import cover_loader
 import cover_print
 import gametdb
 import migrate
+from sound_player import SoundPlayer
 from backend import core, run_async
 from widgets.spinning_paintable import SpinningPaintable
 
@@ -84,7 +85,8 @@ class LibraryPage(Gtk.Box):
     a la vez sobre la unidad (ver _report).
     """
 
-    def __init__(self, log, get_cover_prefs=lambda: ('ES', 'cover3D'), sound_enabled=True, on_sound_toggled=None):
+    def __init__(self, log, get_cover_prefs=lambda: ('ES', 'cover3D'), sound_enabled=True, on_sound_toggled=None,
+                 get_gc_sound=lambda: ''):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         self.set_margin_top(16)
         self.set_margin_bottom(16)
@@ -103,7 +105,8 @@ class LibraryPage(Gtk.Box):
         self._spin_tick = 0         # tick callback del giro de la carátula de tipo «Disco»
         self._sound_enabled = sound_enabled
         self._on_sound_toggled = on_sound_toggled
-        self._sound_media = None    # Gtk.MediaFile del sonido de banner que está sonando
+        self._get_gc_sound = get_gc_sound  # archivo de audio elegido en Ajustes para los juegos de GameCube
+        self._sound_player = SoundPlayer()
         self._sound_request = None  # ID del juego cuyo sonido se ha pedido (el último gana)
         self._sound_timer = 0
 
@@ -742,10 +745,16 @@ class LibraryPage(Gtk.Box):
             self._stop_sound()
 
     def _play_sound(self, game):
-        """Hace sonar el banner del juego de Wii seleccionado (los de GameCube no tienen)."""
+        """Hace sonar el banner del juego de Wii seleccionado; con uno de GameCube, el sonido elegido en Ajustes."""
         self._stop_sound()
+        if game.get('platform') == 'gc':
+            # Los discos de GameCube no traen sonido de banner
+            path = self._get_gc_sound()
+            if self._sound_enabled and path and os.path.isfile(path):
+                self._sound_player.play(path)
+            return
         # Con una operación en curso no se lee de la unidad: wwt no debe compartir la partición
-        if not self._sound_enabled or self._busy or not self._current_path or game.get('platform') == 'gc':
+        if not self._sound_enabled or self._busy or not self._current_path:
             return
         self._sound_request = game.get('id')
         # Al recorrer la tabla con las flechas solo interesa el juego en el que se para
@@ -760,17 +769,14 @@ class LibraryPage(Gtk.Box):
     def _on_sound_ready(self, game_id, path):
         if not path or game_id != self._sound_request or not self._sound_enabled:
             return  # sin sonido, o ya se ha seleccionado otro juego
-        self._sound_media = Gtk.MediaFile.new_for_filename(path)
-        self._sound_media.play()
+        self._sound_player.play(path)
 
     def _stop_sound(self):
         self._sound_request = None
         if self._sound_timer:
             GLib.source_remove(self._sound_timer)
             self._sound_timer = 0
-        if self._sound_media:
-            self._sound_media.set_playing(False)
-            self._sound_media = None
+        self._sound_player.stop()
 
     # ── Carátula (GameTDB, con fallback por región/tipo) ──────────
     def _show_cover(self, game):

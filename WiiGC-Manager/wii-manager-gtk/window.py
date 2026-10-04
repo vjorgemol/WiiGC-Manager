@@ -64,7 +64,8 @@ class MainWindow(Adw.ApplicationWindow):
 
         self.library_page = LibraryPage(log=self.terminal, get_cover_prefs=self._get_cover_prefs,
                                         sound_enabled=bool(self.settings.get('banner_sound', True)),
-                                        on_sound_toggled=self._on_sound_toggled)
+                                        on_sound_toggled=self._on_sound_toggled,
+                                        get_gc_sound=lambda: self.settings.get('gc_sound_path', ''))
         self.format_page = FormatPage(log=self.terminal, on_formatted=self._on_drive_formatted,
                                       get_device_path=self._get_device_path)
         self.convert_page = ConvertPage(get_device_path=self._get_device_path, log=self.terminal)

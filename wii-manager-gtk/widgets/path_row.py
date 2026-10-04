@@ -15,11 +15,12 @@ class PathRow(Adw.ActionRow):
     Tiene get_text()/set_text() como Adw.EntryRow, para los selectores de archivos.
     """
 
-    def __init__(self, title, on_browse, placeholder='', clearable=False):
+    def __init__(self, title, on_browse, placeholder='', clearable=False, on_cleared=None):
         super().__init__(title=title, use_markup=False, css_classes=['property'])
         self._placeholder = placeholder
+        self._on_cleared = on_cleared
         self._clear_btn = self._icon_button('edit-clear-symbolic', 'Quitar', css_classes=['flat'], visible=False)
-        self._clear_btn.connect('clicked', lambda *_: self.set_text(''))
+        self._clear_btn.connect('clicked', lambda *_: self._clear())
         if clearable:
             self.add_suffix(self._clear_btn)
         browse_btn = self._icon_button('folder-open-symbolic', 'Elegir…')
@@ -33,6 +34,11 @@ class PathRow(Adw.ActionRow):
         button = Gtk.Button(icon_name=icon_name, valign=Gtk.Align.CENTER, tooltip_text=tooltip, **props)
         button.set_size_request(BUTTON_WIDTH, -1)
         return button
+
+    def _clear(self):
+        self.set_text('')
+        if self._on_cleared:
+            self._on_cleared()
 
     def get_text(self):
         return self._path

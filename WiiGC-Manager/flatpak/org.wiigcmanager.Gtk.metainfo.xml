@@ -27,6 +27,20 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.5.1" date="2026-10-04">
+      <description>
+        <ul>
+          <li>Corregido: la app se cerraba al seleccionar un juego de GameCube si el sonido elegido era un MP3.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.5.0" date="2026-10-04">
+      <description>
+        <ul>
+          <li>Al seleccionar un juego de GameCube suena el archivo de audio elegido en Ajustes → Sonido de arranque de GameCube. La app no incluye ese sonido: hay que aportar el archivo.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.4.0" date="2026-10-04">
       <description>
         <ul>

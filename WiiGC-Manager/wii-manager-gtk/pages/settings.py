@@ -1,6 +1,6 @@
 """
-Página Ajustes: rutas de wit/wwt/WFS, preferencias de carátulas de GameTDB
-y visibilidad del terminal de resultados. Equivalente a view-settings +
+Página Ajustes: rutas de wit/wwt/WFS, preferencias de carátulas de GameTDB,
+sonido de GameCube y visibilidad del terminal de resultados. Equivalente a view-settings +
 loadSettings()/saveSettings()/detectTool() del frontend web, persistido en
 disco por settings_store (no hay localStorage).
 """
@@ -9,7 +9,10 @@ gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw
 
+import dialogs
+import settings_store
 from backend import core, run_async
+from widgets.path_row import PathRow
 
 # Códigos de GameTDB y sus textos en los desplegables (mismo orden en cada pareja de listas)
 COVER_REGIONS = ['ES', 'EN', 'DE', 'FR', 'IT', 'PT', 'US', 'JA']
@@ -42,6 +45,7 @@ class SettingsPage(Gtk.Box):
         content.append(self._build_terminal_group())
         content.append(self._build_tools_group())
         content.append(self._build_covers_group())
+        content.append(self._build_sound_group())
 
         scroller = Gtk.ScrolledWindow(vexpand=True)
         scroller.set_child(content)
@@ -127,6 +131,29 @@ class SettingsPage(Gtk.Box):
         self._settings['cover_type'] = COVER_TYPES[self._type_row.get_selected()]
         if self._on_cover_prefs_changed:
             self._on_cover_prefs_changed(self._settings)
+
+    # ── Sonido ───────────────────────────────────────────────────
+    # Los juegos de Wii llevan su propio sonido (el banner); los de GameCube no:
+    # el de arranque de la consola no está en los discos ni se incluye con la
+    # app (es de Nintendo), así que lo aporta el usuario como archivo de audio.
+    def _build_sound_group(self):
+        group = Adw.PreferencesGroup(
+            title='Sonido',
+            description='Suena al seleccionar un juego de GameCube en la Videoteca, si el altavoz está activado')
+        self._gc_sound_row = PathRow('Sonido de arranque de GameCube', self._pick_gc_sound,
+                                     placeholder='Sin sonido: elige un archivo de audio (WAV, OGG, MP3, FLAC…)',
+                                     clearable=True, on_cleared=lambda: self._set_gc_sound(''))
+        self._gc_sound_row.set_text(self._settings.get('gc_sound_path', ''))
+        group.add(self._gc_sound_row)
+        return group
+
+    def _pick_gc_sound(self, row):
+        dialogs.pick_file(self.get_root(), row, title='Sonido de arranque de GameCube', on_picked=self._set_gc_sound,
+                          filters=[('Audio', ['*.wav', '*.ogg', '*.oga', '*.mp3', '*.flac', '*.opus', '*.m4a'])])
+
+    def _set_gc_sound(self, path):
+        self._settings['gc_sound_path'] = path
+        settings_store.save(self._settings)
 
     # ── Guardar (rutas de herramientas) ───────────────────────────
     def _save(self):
