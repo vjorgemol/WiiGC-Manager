@@ -1,112 +1,145 @@
-# WiiFlow Manager
+# WiiGC-Manager
 
-GUI web para gestionar juegos Wii en particiones WBFS/USB, construida sobre las herramientas [`wit`](https://wit.wiimm.de/) y [`wwt`](https://wit.wiimm.de/) de Wiimm.
+Gestor de juegos de **Wii** y **GameCube** para unidades USB y tarjetas SD: añade, elimina, convierte, verifica y copia juegos, y prepara la unidad para usarla en la consola con WiiFlow, USB Loader GX y Nintendont. Está construido sobre las herramientas [`wit` y `wwt`](https://wit.wiimm.de/) de Wiimm.
 
-> Funciona exclusivamente en **Linux**. Requiere Python 3 y tener `wit`/`wwt` instalados.
+> Funciona exclusivamente en **Linux** y necesita `wit` y `wwt` instalados.
 
-📖 **[Manual de uso](MANUAL.html)** de la app de escritorio (WiiGC Manager, GTK4): instalación, Videoteca, formateo, conversión, migración y verificación.
+![Videoteca de WiiGC-Manager con la carátula y los datos del juego seleccionado](WiiGC-Manager/flatpak/screenshots/videoteca.png)
 
----
+## Dos versiones
 
-## Características
+El proyecto tiene dos interfaces sobre el mismo motor (`wii-manager-server.py`). Elige la que prefieras:
 
-- 📋 **Listar juegos** en la partición WBFS con título, ID, tamaño y región
-- ➕ **Añadir juegos** desde archivos ISO / WBFS
-- ❌ **Eliminar juegos** individualmente o en lote
-- 💾 **Exportar a ISO** cualquier juego de la partición
-- 🔄 **Convertir** ISO → WBFS y WBFS → ISO (también en lote)
-- 🚚 **Migrar** todos los juegos de una unidad a otra, p. ej. a un disco de más capacidad (solo en la app GTK4)
-- 💾 **Extraer** juegos de la unidad a una carpeta del PC, en ISO o WBFS (solo en la app GTK4)
-- 📤 **Copiar** los juegos seleccionados a otra unidad (solo en la app GTK4)
-- ✅ **Verificar integridad** de juegos con `wit VERIFY`
-- 🖼️ **Carátulas automáticas** desde [GameTDB](https://www.gametdb.com/Wii) con fallback por región y tipo
-- 🎞️ **Banner animado** del juego de Wii como tipo de carátula, leído del propio juego (solo en la app GTK4)
-- 🔊 **Sonido del banner** del juego de Wii seleccionado, como en el menú de la consola (solo en la app GTK4)
-- 🐬 **Jugar en Dolphin** con doble clic sobre un juego, si el emulador está instalado (solo en la app GTK4)
-- 📊 **Estadísticas** de espacio usado y libre en el USB
-- 🔍 **Búsqueda y filtrado** en tiempo real
-- 🖥️ **Terminal integrado** que muestra los comandos ejecutados y su salida
-- ⚙️ **Detección automática** del USB con `--auto` si no se configura ruta
-- 🎨 Vista en **cuadrícula** o **lista**
+| | [Versión de escritorio (GTK4)](#versión-de-escritorio-gtk4) | [Versión web](#versión-web) |
+|---|---|---|
+| **Qué es** | App nativa GTK4/libadwaita | Servidor local + interfaz en el navegador |
+| **Cómo se lanza** | `./run-gtk.sh` o como Flatpak | `./launch.sh` |
+| **Necesita** | Python 3.8+, PyGObject, GTK 4, libadwaita | Python 3.6+ y un navegador |
+| **Estado** | Desarrollo activo; la más completa | Versión original |
+| **Código** | `wii-manager-gtk/` | `wii-manager.html` |
 
----
+Lo que hacen las dos:
 
-## Requisitos
+- 📋 **Listar** los juegos de la unidad con título, ID, tamaño y región
+- ➕ **Añadir** juegos de Wii (ISO / WBFS) y de GameCube
+- ❌ **Eliminar** juegos, de uno en uno o varios a la vez
+- 🔄 **Convertir** entre ISO y WBFS, también en lote
+- ✅ **Verificar** la integridad de los juegos
+- 💽 **Formatear y preparar** la unidad para los cargadores de la consola
+- 🖼️ **Carátulas** de [GameTDB](https://www.gametdb.com/Wii), con alternativas por región y tipo
+- 🔍 **Búsqueda y filtros**, estadísticas de espacio y terminal con los comandos ejecutados
+
+Lo que solo hace la versión de escritorio:
+
+- 🚚 **Migrar** todos los juegos de una unidad a otra, p. ej. a un disco de más capacidad
+- 📤 **Copiar** los juegos seleccionados a otra unidad
+- 💾 **Extraer** juegos a una carpeta del PC, en ISO o WBFS
+- 🔌 **Detectar** al momento las unidades que se conectan o se retiran
+- 🎞️ **Banner animado** del juego de Wii como tipo de carátula, leído del propio juego
+- 🔊 **Sonido del banner** del juego seleccionado, como en el menú de la consola
+- 🐬 **Jugar en Dolphin** con doble clic, si el emulador está instalado
+- 🖨️ **Guardar e imprimir** la carátula completa a tamaño de funda de DVD
+
+## Requisitos comunes
 
 - Linux (cualquier distribución moderna)
-- Python 3.6+
-- `wit` y `wwt` instalados y accesibles en el PATH
+- Python 3
+- `wit` y `wwt` accesibles en el `PATH`
 
-### Instalar wit/wwt
-
-Descarga el paquete para tu distribución desde la web oficial:
-
-```
-https://wit.wiimm.de/download.html
-```
-
-En Debian/Ubuntu puede estar disponible directamente:
+`wit` y `wwt` se descargan de <https://wit.wiimm.de/download.html>. En Debian/Ubuntu pueden estar en los repositorios:
 
 ```bash
 sudo apt install wit
 ```
 
----
-
-## Instalación
+Para leer una partición WBFS, tu usuario necesita permiso sobre el dispositivo:
 
 ```bash
-git clone https://github.com/TU_USUARIO/wii-manager.git
+sudo usermod -aG disk $USER
+# Cierra sesión y vuelve a entrar para que tenga efecto
+```
+
+Descarga del proyecto, válida para las dos versiones:
+
+```bash
+git clone https://github.com/vjorgemol/wii-manager.git
 cd wii-manager
 ```
 
-No hay dependencias de Python adicionales. Solo se usa la biblioteca estándar.
+---
+
+## Versión de escritorio (GTK4)
+
+App nativa para GNOME y otros escritorios, sin servidor ni navegador de por medio.
+
+📖 **[Manual de uso](MANUAL.html)**: instalación, Videoteca, formateo, conversión, migración, verificación y solución de problemas.
+
+![Conversión entre ISO y WBFS](WiiGC-Manager/flatpak/screenshots/convertir.png)
+
+### Requisitos
+
+| Componente | Para qué | Obligatorio |
+|---|---|---|
+| GTK 4 y libadwaita | La interfaz | Sí |
+| Python 3.8 o posterior, con PyGObject | Ejecutar la app | Sí |
+| `wit` y `wwt` | Leer, copiar, convertir y verificar juegos de Wii | Sí |
+| Dolphin | Añadir imágenes RVZ o GCZ y jugar con doble clic | Solo para eso |
+| Conexión a internet | Carátulas, datos de los juegos y descarga de cargadores | No |
+
+En Fedora, la parte gráfica se instala con:
+
+```bash
+sudo dnf install python3-gobject gtk4 libadwaita
+```
+
+### Ejecutar desde el código fuente
+
+```bash
+./run-gtk.sh
+```
+
+### Instalar como Flatpak
+
+```bash
+cd WiiGC-Manager/flatpak
+./build.sh
+flatpak install --user WiiGC-Manager.flatpak
+```
+
+Después aparece como **WiiGC Manager** en el menú de aplicaciones. El Flatpak usa el `wit`, el `wwt` y el Dolphin instalados en el sistema: no los incluye.
+
+La versión instalada y las novedades de cada versión se consultan en el diálogo **Acerca de** de la app.
 
 ---
 
-## Uso
+## Versión web
 
-### 1. Arrancar el servidor
+La versión original: un servidor local en Python (solo biblioteca estándar) y una interfaz que se abre en el navegador.
+
+### Uso
+
+```bash
+./launch.sh            # arranca el servidor y abre el navegador
+./launch.sh --status   # indica si el servidor está en marcha
+./launch.sh --log      # muestra el registro del servidor
+./launch.sh --restart  # lo reinicia
+./launch.sh --stop     # lo detiene
+```
+
+La interfaz queda en <http://localhost:8765> y solo es accesible desde el propio equipo. También se puede arrancar el servidor a mano:
 
 ```bash
 python3 wii-manager-server.py
-```
-
-Verás algo así:
-
-```
-══════════════════════════════════════════════════════
-  WiiFlow Manager — Backend
-  http://localhost:8765
-  Ctrl+C para detener
-══════════════════════════════════════════════════════
-  wit : /usr/bin/wit
-  wwt : /usr/bin/wwt
-```
-
-### 2. Abrir la GUI
-
-```bash
 xdg-open http://localhost:8765
 ```
 
-O abre manualmente `http://localhost:8765` en tu navegador.
+### Explorar la unidad
 
-### 3. Explorar el USB
+- Introduce la ruta de la partición WBFS en el campo lateral (p. ej. `/dev/sdb1`) o el punto de montaje de una unidad FAT32.
+- Pulsa **Explorar dispositivo**.
+- Si dejas el campo vacío, se usa `wwt --auto` para detectar la partición.
 
-- Introduce la ruta de tu partición WBFS en el campo lateral (ej. `/dev/sdb1`)
-- Pulsa **Explorar dispositivo**
-- Si dejas el campo vacío, se usará `wwt --auto` para detectar la partición automáticamente
-
-> **Nota sobre permisos:** si `wwt` no puede acceder a `/dev/sdb1`, ejecuta el servidor con `sudo` o añade tu usuario al grupo `disk`:
-> ```bash
-> sudo usermod -aG disk $USER
-> # Cierra sesión y vuelve a entrar para que tenga efecto
-> ```
-
----
-
-## Comandos que genera la GUI
+### Comandos que genera
 
 | Operación | Comando |
 |---|---|
@@ -119,60 +152,22 @@ O abre manualmente `http://localhost:8765` en tu navegador.
 | Espacio en disco | `wwt SPACE -p /dev/sdb1` |
 | Detección automática | `wwt --auto LIST` |
 
----
+### Carátulas
 
-## Carátulas
+Las carátulas se cargan desde [GameTDB](https://art.gametdb.com) bajo demanda con el botón **⊡ Carátulas**. Si no existe la de la región configurada, se prueba en este orden:
 
-Las carátulas se cargan desde [GameTDB](https://art.gametdb.com) bajo demanda pulsando el botón **⊡ Carátulas**.
-
-Si no existe carátula para la región configurada, la GUI prueba automáticamente en este orden:
-
-**Regiones:** `ES → EN → FR → DE → IT → PT → AU → US → JA → KO`
-
-**Tipos:** `cover3D → cover → coverfull → disc`
-
-Las URLs encontradas se cachean en memoria durante la sesión para no repetir peticiones.
+- **Regiones:** `ES → EN → FR → DE → IT → PT → AU → US → JA → KO`
+- **Tipos:** `cover3D → cover → coverfull → disc`
 
 La región y el tipo preferidos se configuran en **Ajustes → Carátulas**.
 
----
+### Lanzador de escritorio
 
-## Lanzador de escritorio
+Desde **Ajustes** se puede generar un archivo `.desktop` para lanzar la versión web desde el menú de aplicaciones.
 
-Desde **Ajustes** puedes generar un archivo `.desktop` para lanzar la aplicación directamente desde tu entorno de escritorio (GNOME, KDE, XFCE…).
+### API del servidor
 
-También puedes crearlo manualmente:
-
-```ini
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=WiiFlow Manager
-Comment=Gestor de juegos Wii (wit/wwt GUI)
-Exec=bash -c "cd '/ruta/wii-manager' && python3 wii-manager-server.py & sleep 1 && xdg-open http://localhost:8765"
-Icon=applications-games
-Terminal=false
-Categories=Game;Utility;
-```
-
-Guárdalo en `~/.local/share/applications/wiimanager.desktop`.
-
----
-
-## Estructura del proyecto
-
-```
-wii-manager/
-├── wii-manager.html         # Frontend (HTML + CSS + JS, sin dependencias)
-├── wii-manager-server.py    # Backend (Python 3, stdlib únicamente)
-└── README.md
-```
-
----
-
-## API del servidor
-
-El servidor expone una API REST local en `http://localhost:8765`:
+El servidor expone una API REST local en `http://localhost:8765`. Los endpoints principales:
 
 | Endpoint | Método | Descripción |
 |---|---|---|
@@ -184,9 +179,23 @@ El servidor expone una API REST local en `http://localhost:8765`:
 | `/api/verify` | POST | Verifica integridad |
 | `/api/run` | POST | Ejecuta un comando wit/wwt arbitrario |
 
-Todos los endpoints aceptan el parámetro `part` (ruta de la partición). Si se omite o está vacío, se usa `--auto`.
+Todos aceptan el parámetro `part` (ruta de la partición). Si se omite o está vacío, se usa `--auto`.
 
 ---
+
+## Estructura del proyecto
+
+```
+wii-manager/
+├── wii-manager-server.py    # Motor común (Python 3, solo biblioteca estándar) y servidor de la versión web
+├── wii-manager.html         # Versión web: interfaz (HTML + CSS + JS, sin dependencias)
+├── launch.sh                # Versión web: lanzador
+├── wii-manager-gtk/         # Versión de escritorio: app GTK4/libadwaita
+├── run-gtk.sh               # Versión de escritorio: lanzador
+├── WiiGC-Manager/           # Versión de escritorio: copia empaquetable y archivos del Flatpak
+├── MANUAL.html              # Manual de uso de la versión de escritorio
+└── README.md
+```
 
 ## Licencia
 
