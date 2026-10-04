@@ -27,6 +27,11 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.1.1" date="2026-10-04">
+      <description>
+        <p>Diálogo «Acerca de» con la versión de la app.</p>
+      </description>
+    </release>
     <release version="1.1.0" date="2026-10-04">
       <description>
         <p>Migrar todos los juegos de una unidad a otra y copiar los juegos seleccionados a otra unidad.</p>

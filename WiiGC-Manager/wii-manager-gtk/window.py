@@ -9,6 +9,7 @@ gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw, Gio, GLib
 
+import about
 import settings_store
 from backend import core, run_async
 from pages.library import LibraryPage
@@ -94,6 +95,9 @@ class MainWindow(Adw.ApplicationWindow):
         self._theme_btn.set_tooltip_text('Cambiar tema claro/oscuro')
         self._theme_btn.connect('clicked', self._on_toggle_theme)
         header.pack_end(self._theme_btn)
+        about_btn = Gtk.Button(icon_name='help-about-symbolic', tooltip_text='Acerca de WiiGC Manager')
+        about_btn.connect('clicked', lambda *_: about.present(self))
+        header.pack_start(about_btn)
         toolbar_view.add_top_bar(header)
 
         body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
