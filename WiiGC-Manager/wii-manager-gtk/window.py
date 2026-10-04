@@ -4,6 +4,9 @@ Configuración/Archivos de GNOME): panel lateral + contenido, con divisor
 redimensionable de verdad y colapso adaptativo en ventanas estrechas —
 sustituye al <aside>+<main>+showView() manual del frontend web.
 """
+import os
+from pathlib import Path
+
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
@@ -90,6 +93,11 @@ class MainWindow(Adw.ApplicationWindow):
         for signal in ('drive-connected', 'drive-disconnected', 'volume-added', 'volume-removed',
                        'mount-added', 'mount-removed'):
             self._volume_monitor.connect(signal, self._schedule_usb_check)
+        # Esas señales no bastan: una partición WBFS no tiene volumen ni montaje,
+        # y dentro del Flatpak el monitor no ve las unidades. Se vigila además
+        # la lista de dispositivos de bloques y de montajes del sistema.
+        self._block_state = self._read_block_state()
+        GLib.timeout_add_seconds(2, self._poll_block_devices)
         self._check_usb_drives()
 
     # ── Panel lateral (sidebar) ─────────────────────────────────────
@@ -248,6 +256,26 @@ class MainWindow(Adw.ApplicationWindow):
             GLib.source_remove(self._usb_check_id)
         self._usb_check_id = GLib.timeout_add(1000, self._check_usb_drives)
 
+    @staticmethod
+    def _read_block_state():
+        """Dispositivos de bloques y montajes actuales (lectura barata, sin lanzar lsblk)."""
+        state = []
+        for path, read in (('/sys/class/block', lambda p: sorted(os.listdir(p))),
+                           ('/proc/self/mounts', lambda p: Path(p).read_text())):
+            try:
+                state.append(read(path))
+            except OSError:
+                state.append(None)
+        return state
+
+    def _poll_block_devices(self):
+        """Cada 2 s: si se ha conectado, retirado, montado o desmontado algo, revisar las unidades USB."""
+        state = self._read_block_state()
+        if state != self._block_state:
+            self._block_state = state
+            self._schedule_usb_check()
+        return GLib.SOURCE_CONTINUE
+
     def _check_usb_drives(self):
         """Consulta en un hilo las unidades conectadas y aplica la autoselección."""
         self._usb_check_id = 0
@@ -263,22 +291,27 @@ class MainWindow(Adw.ApplicationWindow):
         if state == self._usb_state:
             return
         self._usb_state = state
-        if not drives:
-            # Se ha retirado la unidad que se había autoseleccionado
-            if self._usb_auto_path and self._get_device_path() == self._usb_auto_path:
+
+        def usable_paths(drive):
+            # Una unidad montada (FAT32/NTFS) se explora por su punto de montaje;
+            # una partición WBFS no se monta y se explora por su dispositivo.
+            paths = [v.get('mountpoint') or (v['path'] if v.get('fstype') == 'wbfs' else '')
+                     for v in (drive.get('partitions') or [drive])]
+            return [p for p in paths if p]
+
+        if self._usb_auto_path and not any(self._usb_auto_path in usable_paths(d) for d in drives):
+            # Se ha retirado (o desmontado) la unidad que se había autoseleccionado
+            if self._get_device_path() == self._usb_auto_path:
                 self.terminal.append('Unidad USB desconectada.', 'info')
                 self._device_path_entry.set_text('')
                 self.library_page.clear()
             self._usb_auto_path = ''
-            return
         if len(drives) != 1:
             return
         drive = drives[0]
-        # Una unidad montada (FAT32/NTFS) se explora por su punto de montaje;
-        # una partición WBFS no se monta y se explora por su dispositivo.
-        paths = [v.get('mountpoint') or (v['path'] if v.get('fstype') == 'wbfs' else '')
-                 for v in (drive.get('partitions') or [drive])]
-        paths = [p for p in paths if p]
+        paths = usable_paths(drive)
+        if paths == [self._usb_auto_path]:
+            return  # sigue siendo la unidad ya explorada
         name = drive.get('model') or drive.get('path')
         if len(paths) != 1:
             if paths:

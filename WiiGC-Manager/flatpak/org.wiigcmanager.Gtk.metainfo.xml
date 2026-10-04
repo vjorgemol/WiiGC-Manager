@@ -27,6 +27,13 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.2.1" date="2026-10-04">
+      <description>
+        <ul>
+          <li>La app detecta al momento cuándo se conecta, se retira, se monta o se desmonta una unidad, también las de partición WBFS y dentro del Flatpak; al retirar la unidad explorada se vacía la Videoteca.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.0" date="2026-10-04">
       <description>
         <ul>
