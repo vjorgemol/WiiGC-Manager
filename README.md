@@ -20,6 +20,7 @@ GUI web para gestionar juegos Wii en particiones WBFS/USB, construida sobre las 
 - 📤 **Copiar** los juegos seleccionados a otra unidad (solo en la app GTK4)
 - ✅ **Verificar integridad** de juegos con `wit VERIFY`
 - 🖼️ **Carátulas automáticas** desde [GameTDB](https://www.gametdb.com/Wii) con fallback por región y tipo
+- 🔊 **Sonido del banner** del juego de Wii seleccionado, como en el menú de la consola (solo en la app GTK4)
 - 📊 **Estadísticas** de espacio usado y libre en el USB
 - 🔍 **Búsqueda y filtrado** en tiempo real
 - 🖥️ **Terminal integrado** que muestra los comandos ejecutados y su salida

@@ -95,7 +95,7 @@
 
 <nav>
   <div class="brand">WiiGC Manager</div>
-  <div class="version">Manual de uso · versión 1.2.2</div>
+  <div class="version">Manual de uso · versión 1.4.0</div>
   <ol>
     <li><a href="#instalacion">Requisitos e instalación</a></li>
     <li><a href="#primeros-pasos">Primeros pasos</a></li>
@@ -116,7 +116,7 @@
 
 <h1>WiiGC Manager — Manual de uso</h1>
 <p class="lead">WiiGC Manager gestiona la colección de juegos de <strong>Wii</strong> y <strong>GameCube</strong> de una unidad USB o tarjeta SD: los añade, elimina, convierte, verifica y copia a otra unidad, y prepara la unidad para usarla en la consola con WiiFlow, USB Loader GX y Nintendont.</p>
-<p>Este manual describe la aplicación de escritorio (GTK4, versión 1.2.2). La versión web original, que comparte el mismo motor, se resume <a href="#web">al final</a>.</p>
+<p>Este manual describe la aplicación de escritorio (GTK4, versión 1.4.0). La versión web original, que comparte el mismo motor, se resume <a href="#web">al final</a>.</p>
 
 <figure>
   <img src="WiiGC-Manager/flatpak/screenshots/videoteca.png" alt="Ventana de WiiGC Manager en la vista Videoteca">
@@ -251,8 +251,17 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
   <li><strong>Cancelar</strong> detiene la extracción y descarta el juego que estaba a medias; los ya extraídos se conservan.</li>
 </ul>
 
+<h3>Sonido del juego</h3>
+<p>Al seleccionar un juego de Wii suena su banner: el sonido que se oye en el menú de la consola al elegir el disco. El botón del altavoz, arriba en el panel del juego, lo activa o lo desactiva, y la app recuerda la elección.</p>
+<ul>
+  <li>El sonido se lee del propio juego la primera vez y se guarda en <code>~/.cache/wii-manager-gtk/banners/</code>.</li>
+  <li>Los juegos de GameCube no tienen sonido de banner.</li>
+  <li>Mientras hay una operación en curso (añadir, copiar, extraer, eliminar) no suena.</li>
+</ul>
+
 <h3>Carátulas</h3>
 <p>La carátula se descarga de GameTDB al seleccionar el juego, con la región y el tipo elegidos en Ajustes. Si no existe esa combinación, la app prueba con otras regiones y tipos.</p>
+<p>Con el tipo <strong>Disco</strong>, la imagen del disco gira mientras el juego está seleccionado (salvo que el sistema tenga las animaciones desactivadas).</p>
 <p><strong>Doble clic en la carátula</strong> permite:</p>
 <ul>
   <li><strong>Guardar…</strong>: la guarda como PNG.</li>

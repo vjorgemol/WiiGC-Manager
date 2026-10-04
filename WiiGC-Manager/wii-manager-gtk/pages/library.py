@@ -3,7 +3,8 @@ Página Videoteca: stats, búsqueda/filtros, tabla de juegos (con panel lateral
 de detalle + carátula al seleccionar uno) y "Añadir juego" / "Añadir
 GameCube". Equivalente a view-library del frontend web (scanDevice(),
 applyFilters(), renderGames(), addGame(), submitAddGC()). Además, copia los
-juegos seleccionados a otra unidad y los extrae a una carpeta del PC.
+juegos seleccionados a otra unidad, los extrae a una carpeta del PC y hace
+sonar el banner del juego de Wii seleccionado.
 """
 import os
 import threading
@@ -15,12 +16,17 @@ gi.require_version('Adw', '1')
 gi.require_version('Gdk', '4.0')
 from gi.repository import Gtk, Adw, Gdk, Gio, GLib, GObject, Pango
 
+import banner_sound
 import dialogs
 import cover_loader
 import cover_print
 import gametdb
 import migrate
 from backend import core, run_async
+from widgets.spinning_paintable import SpinningPaintable
+
+# Giro de la carátula de tipo «Disco»: una vuelta cada 4 segundos
+SPIN_DEGREES_PER_SECOND = 90
 
 # Formatos (campo fmt del juego) que entran en el filtro «Formato ISO / GCM»
 ISO_FILTERS = {'iso', 'gcm', 'ciso'}
@@ -78,7 +84,7 @@ class LibraryPage(Gtk.Box):
     a la vez sobre la unidad (ver _report).
     """
 
-    def __init__(self, log, get_cover_prefs=lambda: ('ES', 'cover3D')):
+    def __init__(self, log, get_cover_prefs=lambda: ('ES', 'cover3D'), sound_enabled=True, on_sound_toggled=None):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         self.set_margin_top(16)
         self.set_margin_bottom(16)
@@ -94,6 +100,12 @@ class LibraryPage(Gtk.Box):
         self._busy = False  # hay una operación de añadir/copiar/eliminar en curso
         self._copy_cancel = None  # threading.Event de la copia a otra unidad (o extracción al PC) en curso
         self._covers = {}  # id → Gdk.Texture (o None si GameTDB no tiene carátula)
+        self._spin_tick = 0         # tick callback del giro de la carátula de tipo «Disco»
+        self._sound_enabled = sound_enabled
+        self._on_sound_toggled = on_sound_toggled
+        self._sound_media = None    # Gtk.MediaFile del sonido de banner que está sonando
+        self._sound_request = None  # ID del juego cuyo sonido se ha pedido (el último gana)
+        self._sound_timer = 0
 
         self.append(self._build_stats())
         self.append(self._build_toolbar())
@@ -395,12 +407,19 @@ class LibraryPage(Gtk.Box):
         panel.add_css_class('card')
         panel.set_size_request(208, -1)
 
-        close_btn = Gtk.Button(icon_name='window-close-symbolic', halign=Gtk.Align.END,
+        header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        header.set_margin_top(6)
+        header.set_margin_start(6)
+        header.set_margin_end(6)
+        self._sound_btn = Gtk.ToggleButton(active=self._sound_enabled, css_classes=['flat', 'circular'])
+        self._sound_btn.connect('toggled', self._on_sound_btn_toggled)
+        self._update_sound_btn()
+        header.append(self._sound_btn)
+        close_btn = Gtk.Button(icon_name='window-close-symbolic', halign=Gtk.Align.END, hexpand=True,
                                css_classes=['flat', 'circular'], tooltip_text='Cerrar')
-        close_btn.set_margin_top(6)
-        close_btn.set_margin_end(6)
         close_btn.connect('clicked', lambda *_: self._selection.unselect_all())
-        panel.append(close_btn)
+        header.append(close_btn)
+        panel.append(header)
 
         # Tamaño fijo en el Overlay, no en el Picture (cuyo tamaño natural
         # sale de la imagen descargada y descuadraría el panel).
@@ -453,6 +472,9 @@ class LibraryPage(Gtk.Box):
         self._copy_btn.set_sensitive(bool(items) and not self._busy)
         self._extract_btn.set_sensitive(bool(items) and not self._busy)
         self._detail_revealer.set_reveal_child(bool(items))
+        self._stop_sound()
+        if len(items) != 1:
+            self._stop_spin()
         if not items:
             return
         self._cover_overlay.set_visible(len(items) == 1)
@@ -472,6 +494,7 @@ class LibraryPage(Gtk.Box):
                 ('Discos', game.get('disc_count') if game.get('disc_count', 1) > 1 else '')]
         self._detail_info.set_label('\n'.join(f'{k}: {v}' for k, v in rows if v))
         self._show_cover(game)
+        self._play_sound(game)
 
     @staticmethod
     def _title_list(items, limit=10):
@@ -701,6 +724,54 @@ class LibraryPage(Gtk.Box):
         else:
             self._report(('✗ ' if failed else '✓ ') + text, 'err' if failed else 'ok')
 
+    # ── Sonido del banner (el del menú de la Wii al elegir el disco) ──
+    def _update_sound_btn(self):
+        on = self._sound_btn.get_active()
+        self._sound_btn.set_icon_name('audio-volume-high-symbolic' if on else 'audio-volume-muted-symbolic')
+        self._sound_btn.set_tooltip_text('Sonido del juego al seleccionarlo: ' + ('activado' if on else 'desactivado'))
+
+    def _on_sound_btn_toggled(self, button):
+        self._sound_enabled = button.get_active()
+        self._update_sound_btn()
+        if self._on_sound_toggled:
+            self._on_sound_toggled(self._sound_enabled)
+        item = self._single_selected()
+        if self._sound_enabled and item:
+            self._play_sound(item.game)
+        else:
+            self._stop_sound()
+
+    def _play_sound(self, game):
+        """Hace sonar el banner del juego de Wii seleccionado (los de GameCube no tienen)."""
+        self._stop_sound()
+        # Con una operación en curso no se lee de la unidad: wwt no debe compartir la partición
+        if not self._sound_enabled or self._busy or not self._current_path or game.get('platform') == 'gc':
+            return
+        self._sound_request = game.get('id')
+        # Al recorrer la tabla con las flechas solo interesa el juego en el que se para
+        self._sound_timer = GLib.timeout_add(350, self._fetch_sound, game, self._current_path)
+
+    def _fetch_sound(self, game, part):
+        self._sound_timer = 0
+        run_async(banner_sound.wav_path, game, part,
+                  on_done=lambda path: self._on_sound_ready(game.get('id'), path), on_error=lambda _e: None)
+        return GLib.SOURCE_REMOVE
+
+    def _on_sound_ready(self, game_id, path):
+        if not path or game_id != self._sound_request or not self._sound_enabled:
+            return  # sin sonido, o ya se ha seleccionado otro juego
+        self._sound_media = Gtk.MediaFile.new_for_filename(path)
+        self._sound_media.play()
+
+    def _stop_sound(self):
+        self._sound_request = None
+        if self._sound_timer:
+            GLib.source_remove(self._sound_timer)
+            self._sound_timer = 0
+        if self._sound_media:
+            self._sound_media.set_playing(False)
+            self._sound_media = None
+
     # ── Carátula (GameTDB, con fallback por región/tipo) ──────────
     def _show_cover(self, game):
         """Muestra la carátula del juego: la que ya está en memoria o, si no, la pide en un hilo."""
@@ -747,9 +818,42 @@ class LibraryPage(Gtk.Box):
             self._show_cover(item.game)
 
     def _set_cover(self, texture):
-        self._cover.set_paintable(texture)
+        self._stop_spin()
+        paintable = texture
+        if texture is not None and self._is_disc(texture):
+            paintable = SpinningPaintable(texture)
+            self._start_spin(paintable)
+        self._cover.set_paintable(paintable)
         self._cover.set_visible(texture is not None)
         self._cover_status.set_label('' if texture else 'Sin carátula')
+
+    def _is_disc(self, texture):
+        """True si en Ajustes se pide la carátula «Disco» y la imagen lo es (cuadrada), no una de reserva de otro tipo."""
+        if self._get_cover_prefs()[1] != 'disc':
+            return False
+        width, height = texture.get_intrinsic_width(), texture.get_intrinsic_height()
+        return height > 0 and 0.9 < width / height < 1.1
+
+    def _start_spin(self, paintable):
+        """Hace girar la carátula mientras esté a la vista (salvo con las animaciones del sistema desactivadas)."""
+        if not self._cover.get_settings().get_property('gtk-enable-animations'):
+            return
+        start = None
+
+        def on_tick(_widget, clock):
+            nonlocal start
+            now = clock.get_frame_time()  # microsegundos
+            if start is None:
+                start = now
+            paintable.set_angle((now - start) / 1e6 * SPIN_DEGREES_PER_SECOND)
+            return GLib.SOURCE_CONTINUE
+
+        self._spin_tick = self._cover.add_tick_callback(on_tick)
+
+    def _stop_spin(self):
+        if self._spin_tick:
+            self._cover.remove_tick_callback(self._spin_tick)
+            self._spin_tick = 0
 
     # ── Guardar / imprimir carátula (doble clic) ──────────────────
     def _on_cover_pressed(self, _gesture, n_press, _x, _y):

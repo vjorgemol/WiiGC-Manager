@@ -68,10 +68,11 @@ PY
 #  - host + /run/media…: leer imágenes y escribir en las unidades USB/SD
 #  - org.freedesktop.Flatpak: ejecutar en el sistema wit, wwt, lsblk, mkfs, pkexec, dolphin-tool…
 #  - network: carátulas y base de datos de GameTDB, descarga de cargadores
+#  - pulseaudio: sonido del banner del juego seleccionado
 flatpak build-finish "$BUILD" \
     --command=wiigc-manager \
     --share=ipc --share=network \
-    --socket=wayland --socket=fallback-x11 --device=dri \
+    --socket=wayland --socket=fallback-x11 --socket=pulseaudio --device=dri \
     --filesystem=host --filesystem=/run/media --filesystem=/media --filesystem=/mnt --filesystem=/var/tmp \
     --talk-name=org.freedesktop.Flatpak
 

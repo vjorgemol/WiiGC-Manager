@@ -62,7 +62,9 @@ class MainWindow(Adw.ApplicationWindow):
 
         sidebar_page = self._build_sidebar_page()
 
-        self.library_page = LibraryPage(log=self.terminal, get_cover_prefs=self._get_cover_prefs)
+        self.library_page = LibraryPage(log=self.terminal, get_cover_prefs=self._get_cover_prefs,
+                                        sound_enabled=bool(self.settings.get('banner_sound', True)),
+                                        on_sound_toggled=self._on_sound_toggled)
         self.format_page = FormatPage(log=self.terminal, on_formatted=self._on_drive_formatted,
                                       get_device_path=self._get_device_path)
         self.convert_page = ConvertPage(get_device_path=self._get_device_path, log=self.terminal)
@@ -355,6 +357,11 @@ class MainWindow(Adw.ApplicationWindow):
         """Ajustes → Carátulas: guardar y volver a pedir la carátula que está a la vista."""
         settings_store.save(settings)
         self.library_page.reload_cover()
+
+    def _on_sound_toggled(self, enabled):
+        """Videoteca → botón del altavoz: recordar si se quiere el sonido de los juegos."""
+        self.settings['banner_sound'] = enabled
+        settings_store.save(self.settings)
 
     def _get_cover_prefs(self):
         """(región, tipo) de carátula elegidos en Ajustes."""

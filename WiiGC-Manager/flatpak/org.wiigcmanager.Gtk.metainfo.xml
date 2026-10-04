@@ -27,6 +27,28 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.4.0" date="2026-10-04">
+      <description>
+        <ul>
+          <li>Con el tipo de carátula «Disco» elegido en Ajustes, el disco gira mientras el juego está seleccionado.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.3.0" date="2026-10-04">
+      <description>
+        <ul>
+          <li>Al seleccionar un juego de Wii suena su banner, el sonido del menú de la consola al elegir el disco. Se activa y desactiva con el botón del altavoz del panel del juego.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.2.3" date="2026-10-04">
+      <description>
+        <ul>
+          <li>Corregido un fallo grave de la versión Flatpak: al añadir un juego de GameCube con una partición WBFS explorada, el juego no se guardaba en el disco y los juegos de Wii dejaban de mostrarse (seguían intactos en la unidad).</li>
+          <li>Ahora la app avisa de que una partición WBFS solo admite juegos de Wii; los de GameCube necesitan una unidad FAT32.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.2" date="2026-10-04">
       <description>
         <ul>

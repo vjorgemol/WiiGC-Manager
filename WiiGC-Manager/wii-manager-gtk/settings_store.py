@@ -15,6 +15,7 @@ DEFAULTS = {
     'cover_region': 'ES',      # región y tipo de carátula que se piden primero a GameTDB
     'cover_type': 'cover3D',
     'show_terminal': False,    # panel inferior con la salida de los comandos
+    'banner_sound': True,      # hacer sonar el banner del juego de Wii seleccionado
 }
 
 
