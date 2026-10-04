@@ -48,6 +48,10 @@ class OperationStatus(Gtk.Box):
         self._bar.set_visible(False)
         self._set_text(text, None if ok is None else 'success' if ok else 'error')
 
+    def set_text(self, text):
+        """Cambia el texto de la operación en curso (p. ej. el paso por el que va)."""
+        self._set_text(text, None)
+
     def _set_text(self, text, css_class):
         self._label.set_label(text)
         for css in ('success', 'error'):

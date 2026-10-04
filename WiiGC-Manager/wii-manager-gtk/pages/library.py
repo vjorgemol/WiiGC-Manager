@@ -2,8 +2,11 @@
 Página Videoteca: stats, búsqueda/filtros, tabla de juegos (con panel lateral
 de detalle + carátula al seleccionar uno) y "Añadir juego" / "Añadir
 GameCube". Equivalente a view-library del frontend web (scanDevice(),
-applyFilters(), renderGames(), addGame(), submitAddGC()).
+applyFilters(), renderGames(), addGame(), submitAddGC()). Además, copia los
+juegos seleccionados a otra unidad.
 """
+import os
+import threading
 from types import SimpleNamespace
 
 import gi
@@ -16,6 +19,7 @@ import dialogs
 import cover_loader
 import cover_print
 import gametdb
+import migrate
 from backend import core, run_async
 
 ISO_FILTERS = {'iso', 'gcm', 'ciso'}
@@ -80,7 +84,8 @@ class LibraryPage(Gtk.Box):
         self._active_filter = 'all'
         self._search_text = ''
         self._current_path = ''
-        self._busy = False  # hay una operación de añadir/eliminar en curso
+        self._busy = False  # hay una operación de añadir/copiar/eliminar en curso
+        self._copy_cancel = None  # threading.Event de la copia a otra unidad en curso
         self._covers = {}  # id → Gdk.Texture (o None si GameTDB no tiene carátula)
 
         self.append(self._build_stats())
@@ -162,6 +167,11 @@ class LibraryPage(Gtk.Box):
         add_gc_btn.connect('clicked', lambda *_: self.open_add_gc_dialog())
         box.append(add_gc_btn)
 
+        self._copy_btn = Gtk.Button(label='Copiar a…', sensitive=False,
+                                    tooltip_text='Copiar los juegos seleccionados a otra unidad')
+        self._copy_btn.connect('clicked', lambda *_: self._choose_copy_destination())
+        box.append(self._copy_btn)
+
         self._remove_btn = Gtk.Button(label='Eliminar', css_classes=['destructive-action'], sensitive=False,
                                       tooltip_text='Eliminar los juegos seleccionados (Supr)')
         self._remove_btn.connect('clicked', lambda *_: self._confirm_remove())
@@ -183,7 +193,10 @@ class LibraryPage(Gtk.Box):
         self._status_dismiss.connect('clicked', lambda *_: self._status_row.set_visible(False))
         self._status_row.append(self._status_spinner)
         self._status_row.append(self._status_label)
+        self._status_cancel = Gtk.Button(label='Cancelar', valign=Gtk.Align.CENTER, visible=False)
+        self._status_cancel.connect('clicked', lambda *_: self._on_cancel_copy())
         self._status_row.append(self._status_progress)
+        self._status_row.append(self._status_cancel)
         self._status_row.append(self._status_dismiss)
         return self._status_row
 
@@ -200,6 +213,7 @@ class LibraryPage(Gtk.Box):
         self._status_spinner.set_visible(busy)
         self._status_spinner.set_spinning(busy)
         self._status_dismiss.set_visible(not busy)
+        self._status_cancel.set_visible(busy and self._copy_cancel is not None)
         self._status_progress.set_visible(False)
         if busy and not self._progress_timer:
             self._progress_timer = GLib.timeout_add(500, self._poll_progress)
@@ -208,6 +222,7 @@ class LibraryPage(Gtk.Box):
         self._add_btn.set_sensitive(not busy)
         self._add_gc_btn.set_sensitive(not busy)
         self._remove_btn.set_sensitive(not busy and bool(self._selected_items()))
+        self._copy_btn.set_sensitive(not busy and bool(self._selected_items()))
 
     def _poll_progress(self):
         """Mientras dura una operación, refleja en la barra el avance que da el backend."""
@@ -262,7 +277,7 @@ class LibraryPage(Gtk.Box):
         self._apply_filters()
 
     def is_busy(self):
-        """True mientras se añade o elimina un juego (no conviene cerrar la app)."""
+        """True mientras se añade, copia o elimina un juego (no conviene cerrar la app)."""
         return self._busy
 
     def get_games(self):
@@ -410,6 +425,7 @@ class LibraryPage(Gtk.Box):
     def _on_selection_changed(self):
         items = self._selected_items()
         self._remove_btn.set_sensitive(bool(items) and not self._busy)
+        self._copy_btn.set_sensitive(bool(items) and not self._busy)
         self._detail_revealer.set_reveal_child(bool(items))
         if not items:
             return
@@ -486,6 +502,91 @@ class LibraryPage(Gtk.Box):
             self._report(f'✓ {len(results)} juego(s) eliminados', 'ok')
         self._selection.unselect_all()
         self.load_games(self._current_path)
+
+    # ── Copiar juegos a otra unidad ──────────────────────────────
+    def _choose_copy_destination(self):
+        items = self._selected_items()
+        if not items or self._busy:
+            return
+        if not self._current_path:
+            self._report('✗ Explora primero la unidad de la que quieres copiar', 'err')
+            return
+        games = [i.game for i in items]
+        summary = (f'{self._title_list(items)}\n\nTamaño total: {sum(i.size for i in items):.2f} GB. '
+                   'Los que ya estén en el destino se omiten.')
+        run_async(core.api_devices, {}, on_done=lambda data: self._show_copy_dialog(games, summary, data),
+                  on_error=lambda e: self._report(f'✗ {e}', 'err'))
+
+    def _show_copy_dialog(self, games, summary, data):
+        src = os.path.realpath(self._current_path)
+        vols = [v for v in migrate.volumes(data.get('devices', [])) if os.path.realpath(v['path']) != src]
+        if not vols:
+            self._report('✗ No hay otra unidad a la que copiar: conecta la de destino '
+                         '(si es FAT32/NTFS, tiene que estar montada)', 'err')
+            return
+        count = '1 juego' if len(games) == 1 else f'{len(games)} juegos'
+        dialog = Adw.AlertDialog(heading=f'Copiar {count} a otra unidad', body=summary)
+        dropdown = Gtk.DropDown.new_from_strings([v['name'] for v in vols])
+        dialog.set_extra_child(dropdown)
+        dialog.add_response('cancel', 'Cancelar')
+        dialog.add_response('copy', 'Copiar')
+        dialog.set_response_appearance('copy', Adw.ResponseAppearance.SUGGESTED)
+        dialog.set_default_response('copy')
+        dialog.set_close_response('cancel')
+
+        def on_response(_dialog, response):
+            if response == 'copy' and not self._busy:
+                self._start_copy(games, vols[dropdown.get_selected()]['path'])
+
+        dialog.connect('response', on_response)
+        dialog.present(self.get_root())
+
+    def _start_copy(self, games, dst):
+        self._copy_cancel = threading.Event()
+        self._status_cancel.set_sensitive(True)
+        self._report(f'Copiando {len(games)} juego(s) a {dst}… Puede tardar, no desconectes las unidades.', 'info')
+        only = {('gc', g.get('folder')) if g.get('platform') == 'gc' else ('wii', g.get('id')) for g in games}
+
+        def on_game(n, total, game):  # llega desde el hilo de la copia
+            GLib.idle_add(self._on_copy_game,
+                          f"Copiando {game.get('title', '?')} [{game.get('id', '?')}] ({n + 1} de {total})…")
+
+        run_async(migrate.migrate, self._current_path, dst, self._copy_cancel, on_game, only,
+                  on_done=lambda result: self._on_copied(dst, *result), on_error=self._on_copy_error)
+
+    def _on_copy_game(self, text):
+        if self._copy_cancel and not self._copy_cancel.is_set():
+            self._log.append(text, 'info')
+            self._status_label.set_label(text)
+        return GLib.SOURCE_REMOVE
+
+    def _on_cancel_copy(self):
+        self._copy_cancel.set()
+        self._status_cancel.set_sensitive(False)
+        self._status_label.set_label('Cancelando… Se descarta el juego que se estaba copiando.')
+
+    def _on_copy_error(self, error):
+        self._copy_cancel = None
+        self._report(f'✗ {error}', 'err')
+
+    def _on_copied(self, dst, copied, failed, cancelled, todo):
+        self._copy_cancel = None
+        for game in copied:
+            self._log.append(f"✓ Copiado {game['title']} [{game['id']}]", 'ok')
+        for game, error in failed:
+            self._log.append(f"✗ No se pudo copiar {game['title']} [{game['id']}]: {error}", 'err')
+        parts = [f'{len(copied)} juego(s) copiados a {dst}']
+        if todo['present']:
+            parts.append(f"{len(todo['present'])} ya estaban en el destino")
+        if todo['unsupported']:
+            parts.append(f"{len(todo['unsupported'])} de GameCube no se pueden copiar a una partición WBFS (solo admite Wii)")
+        if failed:
+            parts.append(f'{len(failed)} con errores; detalles en el terminal')
+        text = ' · '.join(parts)
+        if cancelled:
+            self._report(f'Copia cancelada: {text}', 'err' if failed else '')
+        else:
+            self._report(('✗ ' if failed else '✓ ') + text, 'err' if failed else 'ok')
 
     # ── Carátula (GameTDB, con fallback por región/tipo) ──────────
     def _show_cover(self, game):

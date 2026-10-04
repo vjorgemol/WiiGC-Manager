@@ -13,6 +13,8 @@ GUI web para gestionar juegos Wii en particiones WBFS/USB, construida sobre las 
 - ❌ **Eliminar juegos** individualmente o en lote
 - 💾 **Exportar a ISO** cualquier juego de la partición
 - 🔄 **Convertir** ISO → WBFS y WBFS → ISO (también en lote)
+- 🚚 **Migrar** todos los juegos de una unidad a otra, p. ej. a un disco de más capacidad (solo en la app GTK4)
+- 📤 **Copiar** los juegos seleccionados a otra unidad (solo en la app GTK4)
 - ✅ **Verificar integridad** de juegos con `wit VERIFY`
 - 🖼️ **Carátulas automáticas** desde [GameTDB](https://www.gametdb.com/Wii) con fallback por región y tipo
 - 📊 **Estadísticas** de espacio usado y libre en el USB

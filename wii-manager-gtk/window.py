@@ -14,6 +14,7 @@ from backend import core, run_async
 from pages.library import LibraryPage
 from pages.format import FormatPage
 from pages.convert import ConvertPage
+from pages.migrate import MigratePage
 from pages.verify import VerifyPage
 from pages.settings import SettingsPage
 from widgets.log_view import LogView
@@ -22,6 +23,7 @@ VIEWS = [
     ('library', 'view-list-symbolic', 'Videoteca'),
     ('format', 'drive-harddisk-symbolic', 'Formatear / Preparar'),
     ('convert', 'edit-copy-symbolic', 'Convertir'),
+    ('migrate', 'drive-multidisk-symbolic', 'Migrar'),
     ('verify', 'object-select-symbolic', 'Verificar'),
     ('settings', 'preferences-system-symbolic', 'Ajustes'),
 ]
@@ -51,6 +53,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.format_page = FormatPage(log=self.terminal, on_formatted=self._on_drive_formatted,
                                       get_device_path=self._get_device_path)
         self.convert_page = ConvertPage(get_device_path=self._get_device_path, log=self.terminal)
+        self.migrate_page = MigratePage(get_device_path=self._get_device_path, log=self.terminal,
+                                        on_migrated=self._on_migrated)
         self.verify_page = VerifyPage(get_device_path=self._get_device_path, log=self.terminal,
                                       get_games=self.library_page.get_games)
         self.settings_page = SettingsPage(self.settings, on_save=self._on_settings_saved,
@@ -200,7 +204,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _on_close_request(self, _window):
         # Cerrar la app en mitad de una copia la interrumpe y deja el juego a medias
-        if not self.library_page.is_busy():
+        if not (self.library_page.is_busy() or self.migrate_page.is_busy()):
             return False
         dialog = Adw.AlertDialog(
             heading='Hay una operación en curso',
@@ -211,9 +215,14 @@ class MainWindow(Adw.ApplicationWindow):
         dialog.set_response_appearance('close', Adw.ResponseAppearance.DESTRUCTIVE)
         dialog.set_default_response('wait')
         dialog.set_close_response('wait')
-        dialog.connect('response', lambda _d, response: self.destroy() if response == 'close' else None)
+        dialog.connect('response', self._on_close_response)
         dialog.present(self)
         return True
+
+    def _on_close_response(self, _dialog, response):
+        if response == 'close':
+            self.migrate_page.abort()
+            self.destroy()
 
     def _schedule_usb_check(self, *_args):
         # Enchufar una unidad dispara varias señales seguidas (drive, volume,
@@ -229,6 +238,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _autoselect_usb_drive(self, data):
         """Si hay exactamente una unidad USB conectada, usarla y explorarla."""
+        self.migrate_page.set_devices(data.get('devices', []))
         drives = [d for d in data.get('devices', []) if d.get('transport') == 'usb' and not d.get('is_system')]
         state = [(d.get('path'), [(v.get('path'), v.get('mountpoint')) for v in (d.get('partitions') or [d])])
                  for d in drives]
@@ -269,6 +279,11 @@ class MainWindow(Adw.ApplicationWindow):
         self._usb_auto_path = path
         self._device_path_entry.set_text(path)
         self._on_scan_device()
+
+    def _on_migrated(self):
+        """Tras migrar: la unidad explorada puede haber ganado o perdido juegos."""
+        if self._get_device_path():
+            self._on_scan_device()
 
     def _on_scan_device(self, *_args):
         self.library_page.load_games(self._get_device_path())
@@ -332,6 +347,7 @@ class MainWindow(Adw.ApplicationWindow):
         format_scroller = Gtk.ScrolledWindow(child=self.format_page, hscrollbar_policy=Gtk.PolicyType.NEVER)
         stack.add_named(self._clamp(format_scroller), 'format')
         stack.add_named(self._clamp(self.convert_page), 'convert')
+        stack.add_named(self._clamp(self.migrate_page), 'migrate')
         stack.add_named(self._clamp(self.verify_page), 'verify')
         stack.add_named(self._clamp(self.settings_page), 'settings')
         stack.set_margin_top(8)
@@ -359,5 +375,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._content_page.set_title(next(label for n, _i, label in VIEWS if n == name))
         if name == 'verify':
             self.verify_page.refresh_games()
+        if name == 'migrate':
+            self.migrate_page.refresh()
         if name == 'format':
             self.format_page.refresh_loaders()

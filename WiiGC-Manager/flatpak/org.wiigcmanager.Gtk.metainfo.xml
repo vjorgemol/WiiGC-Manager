@@ -12,8 +12,8 @@
   <url type="bugtracker">https://github.com/vjorgemol/wii-manager/issues</url>
   <launchable type="desktop-id">org.wiigcmanager.Gtk.desktop</launchable>
   <description>
-    <p>Videoteca de juegos de Wii y GameCube para unidades USB/SD: añadir, eliminar, convertir y
-    verificar imágenes, preparar la unidad para WiiFlow/Nintendont y descargar carátulas de GameTDB.</p>
+    <p>Videoteca de juegos de Wii y GameCube para unidades USB/SD: añadir, eliminar, convertir,
+    verificar y migrar juegos a otra unidad, preparar la unidad para WiiFlow/Nintendont y descargar carátulas de GameTDB.</p>
     <p>Necesita wit y wwt (Wiimms ISO Tools) instalados en el sistema; para imágenes RVZ/GCZ, también Dolphin.</p>
   </description>
   <screenshots>
