@@ -27,6 +27,13 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.7.2" date="2026-10-04">
+      <description>
+        <ul>
+          <li>El archivo de texto que se deja en la unidad al formatearla nombra la app como WiiGC-Manager, en lugar del antiguo «WiiFlow Manager».</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.7.1" date="2026-10-04">
       <description>
         <ul>
