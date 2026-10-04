@@ -511,7 +511,16 @@ _adds_lock = threading.Lock()
 
 def is_mounted_dir(part):
     """True si la ruta es un directorio (unidad montada) y no una partición WBFS."""
-    return bool(part) and os.path.isdir(part)
+    return bool(part) and not is_device_path(part) and os.path.isdir(part)
+
+
+def is_device_path(part):
+    """
+    True si la ruta es un dispositivo (/dev/…), exista o no aquí: dentro del
+    Flatpak /dev es propio del sandbox y no tiene los discos del sistema, así
+    que nunca hay que tratarla como carpeta ni crear nada dentro.
+    """
+    return os.path.abspath(part).startswith('/dev/')
 
 
 def wbfs_folder(part):
@@ -1993,6 +2002,10 @@ def find_games_dir(root_path):
     if not root_path or not root_path.strip():
         return None
     p = Path(root_path.strip())
+    if is_device_path(str(p)):
+        # Un dispositivo solo tiene carpeta de juegos si está montado
+        mp = get_mount_map().get(str(p))
+        return find_games_dir(mp) if mp else None
     if p.name.lower() == 'games' and p.is_dir():
         return p
     if (p / 'games').is_dir():
@@ -2136,6 +2149,9 @@ def _api_gc_add(params):
     folder_name = f'{safe_title} [{game_id}]'
 
     games_dir = find_games_dir(dest)
+    if not games_dir and is_device_path(dest):
+        return {'error': f'{dest} es una partición WBFS (o no está montada): solo admite juegos de Wii. '
+                         'Los juegos de GameCube necesitan una unidad FAT32 montada.'}
     if not games_dir:
         games_dir = Path(dest) / 'games'
 

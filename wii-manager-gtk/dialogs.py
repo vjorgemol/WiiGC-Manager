@@ -115,6 +115,11 @@ def open_add_gc_dialog(root, current_path, log, on_added=None):
     Elige una imagen de GameCube y la copia a /games de la unidad explorada, como
     game.iso o disc2.iso según su número de disco. on_added() se llama si se ha añadido.
     """
+    if current_path and not core.is_mounted_dir(current_path):
+        log.append('✗ La unidad explorada es una partición WBFS, que solo admite juegos de Wii. '
+                   'Los juegos de GameCube necesitan una unidad FAT32 montada.', 'err')
+        return
+
     def add(src, meta):
         # Número de disco leído de la propia imagen
         disc = meta['disc'] if meta.get('disc') in (1, 2) else 1
