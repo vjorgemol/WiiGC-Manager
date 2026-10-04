@@ -27,6 +27,23 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.2.0" date="2026-10-04">
+      <description>
+        <ul>
+          <li>Nuevo botón «Extraer…» en la Videoteca: guarda los juegos seleccionados en una carpeta del PC, los de Wii en formato ISO o WBFS y los de GameCube tal cual.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.1.2" date="2026-10-04">
+      <description>
+        <ul>
+          <li>Las unidades con una partición WBFS (sin montar) se detectan y se exploran automáticamente al conectarlas.</li>
+          <li>La Videoteca vuelve a mostrar el espacio usado y el espacio libre de las particiones WBFS.</li>
+          <li>Aviso con la solución cuando falta permiso para leer la unidad (grupo «disk»).</li>
+          <li>El diálogo «Acerca de» muestra también las novedades de las versiones anteriores.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.1.1" date="2026-10-04">
       <description>
         <p>Diálogo «Acerca de» con la versión de la app.</p>

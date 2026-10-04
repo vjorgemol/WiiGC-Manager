@@ -95,7 +95,7 @@
 
 <nav>
   <div class="brand">WiiGC Manager</div>
-  <div class="version">Manual de uso · versión 1.1.1</div>
+  <div class="version">Manual de uso · versión 1.2.0</div>
   <ol>
     <li><a href="#instalacion">Requisitos e instalación</a></li>
     <li><a href="#primeros-pasos">Primeros pasos</a></li>
@@ -116,7 +116,7 @@
 
 <h1>WiiGC Manager — Manual de uso</h1>
 <p class="lead">WiiGC Manager gestiona la colección de juegos de <strong>Wii</strong> y <strong>GameCube</strong> de una unidad USB o tarjeta SD: los añade, elimina, convierte, verifica y copia a otra unidad, y prepara la unidad para usarla en la consola con WiiFlow, USB Loader GX y Nintendont.</p>
-<p>Este manual describe la aplicación de escritorio (GTK4, versión 1.1.1). La versión web original, que comparte el mismo motor, se resume <a href="#web">al final</a>.</p>
+<p>Este manual describe la aplicación de escritorio (GTK4, versión 1.2.0). La versión web original, que comparte el mismo motor, se resume <a href="#web">al final</a>.</p>
 
 <figure>
   <img src="WiiGC-Manager/flatpak/screenshots/videoteca.png" alt="Ventana de WiiGC Manager en la vista Videoteca">
@@ -227,7 +227,7 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
   <li>Las imágenes RVZ y GCZ se convierten antes a ISO con Dolphin, porque ni los cargadores ni <code>wit</code> las leen.</li>
   <li>En los juegos de GameCube, el número de disco se lee de la propia imagen. Si el juego tiene dos discos, la app avisa de que falta el otro.</li>
   <li>Si el juego de Wii ya está en la unidad, no se vuelve a copiar.</li>
-  <li>Solo se hace una operación de escritura a la vez: mientras dura, los botones de añadir, copiar y eliminar quedan desactivados.</li>
+  <li>Solo se hace una operación de escritura a la vez: mientras dura, los botones de añadir, copiar, extraer y eliminar quedan desactivados.</li>
 </ul>
 
 <h3>Eliminar juegos</h3>
@@ -241,6 +241,15 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
   <li><strong>Cancelar</strong> detiene la copia y descarta el juego que estaba a medias; los ya copiados se conservan.</li>
 </ul>
 <p>Para copiar toda la colección, usa <a href="#migrar">Migrar</a>.</p>
+
+<h3>Extraer al PC</h3>
+<p>Selecciona los juegos y pulsa <strong>Extraer…</strong> para guardar una copia en una carpeta del PC. Los juegos siguen en la unidad.</p>
+<ul>
+  <li>Para los juegos de Wii se elige el formato: <strong>ISO</strong> (imagen completa del disco) o <strong>WBFS</strong> (solo los datos usados, ocupa menos). El archivo se llama «Título [ID].iso» o «.wbfs».</li>
+  <li>Los de GameCube se copian tal cual, en una carpeta con el mismo nombre que tienen en la unidad.</li>
+  <li>No se sobrescribe nada: lo que ya exista en la carpeta se omite.</li>
+  <li><strong>Cancelar</strong> detiene la extracción y descarta el juego que estaba a medias; los ya extraídos se conservan.</li>
+</ul>
 
 <h3>Carátulas</h3>
 <p>La carátula se descarga de GameTDB al seleccionar el juego, con la región y el tipo elegidos en Ajustes. Si no existe esa combinación, la app prueba con otras regiones y tipos.</p>

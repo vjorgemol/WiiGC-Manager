@@ -5,6 +5,8 @@ los juegos en /wbfs/ y /games/) o una partición WBFS.
 
 Los juegos de Wii se copian con wit/wwt, que leen y escriben ambos tipos de
 unidad; los de GameCube son archivos sueltos y se copian tal cual.
+
+También extrae juegos de una unidad a una carpeta del PC (extract()).
 """
 import os
 import re
@@ -269,3 +271,78 @@ def migrate(src, dst, cancel, on_game=None, only=None):
             # track_write solo vacía la caché de las unidades montadas
             core.run(f'sync {shlex.quote(dst)}', timeout=3600)
     return copied, failed, cancel.is_set(), todo
+
+
+def _safe_name(text, fallback):
+    """text sin los caracteres que no admite un nombre de archivo (FAT32/NTFS incluidos)."""
+    return re.sub(r'[<>:"/\\|?*\x00-\x1f]', '', text or '').strip(' .') or fallback
+
+
+def extract(games, part, dest, fmt, cancel, on_game=None):
+    """
+    Extrae a la carpeta dest del PC los juegos (dicts de la Videoteca) de la
+    unidad part (bloqueante: llamar vía run_async). Los de Wii quedan como
+    «Título [ID6].iso» o «.wbfs» según fmt ('iso' o 'wbfs'); los de GameCube,
+    en una carpeta con sus archivos tal cual. No sobrescribe: lo que ya exista
+    en dest se omite. cancel y on_game, como en migrate().
+
+    Devuelve (extraídos, [(game, error)], cancelado, ya_presentes).
+    Lanza OSError si dest no es una carpeta o si no caben.
+    """
+    wit, _wwt = _tools()
+    if not os.path.isdir(dest):
+        raise OSError(f'No existe la carpeta {dest}')
+    todo, present = [], []
+    for g in games:
+        game = {'platform': g.get('platform'), 'id': g.get('id', ''), 'title': g.get('title') or g.get('id', '')}
+        if game['platform'] == 'gc':
+            target = Path(dest) / Path(g['folder']).name
+            files = [(str(f), str(target / f.name), f.stat().st_size)
+                     for f in sorted(Path(g['folder']).iterdir()) if f.is_file()]
+            game.update(target=str(target), files=files, bytes=sum(size for _s, _d, size in files))
+        else:
+            # En una partición WBFS el juego se elige con <partición>/<ID6>
+            source = g['path'] if os.path.isfile(g.get('path') or '') else f"{part}/{game['id']}"
+            target = Path(dest) / f"{_safe_name(game['title'], game['id'])} [{game['id']}].{fmt}"
+            game.update(target=str(target), source=source,
+                        bytes=g.get('size_bytes') or int((g.get('size') or 0) * 1024**3))
+        (present if os.path.exists(game['target']) else todo).append(game)
+
+    total = sum(g['bytes'] for g in todo)
+    free = shutil.disk_usage(dest).free
+    if total > free:
+        raise OSError(f'No caben en {dest}: hacen falta {total / 1024**3:.2f} GB '
+                      f'y hay {free / 1024**3:.2f} GB libres')
+    done, failed = [], []
+    with core.track_write(dest, total):
+        for n, game in enumerate(todo):
+            if cancel.is_set():
+                break
+            if on_game:
+                on_game(n, len(todo), game)
+            try:
+                if game['platform'] == 'gc':
+                    _copy_gc(game, cancel)
+                else:
+                    _extract_wii(wit, game, fmt, cancel)
+                done.append(game)
+            except Cancelled:
+                break
+            except OSError as e:
+                failed.append((game, str(e)))
+    return done, failed, cancel.is_set(), present
+
+
+def _extract_wii(wit, game, fmt, cancel):
+    """Convierte un juego de Wii a un archivo ISO o WBFS. Si falla o se cancela, borra el archivo a medias."""
+    target = Path(game['target'])
+    cmd = f"{wit} COPY {shlex.quote(game['source'])} --{fmt} --DEST {shlex.quote(str(target))}"
+    try:
+        _stdout, stderr, rc = _run(cmd, cancel)
+    except Cancelled:
+        target.unlink(missing_ok=True)
+        raise
+    if rc != 0:
+        target.unlink(missing_ok=True)
+        reason = stderr.strip().splitlines()
+        raise OSError(reason[-1].strip() if reason else f'wit devolvió código {rc}')

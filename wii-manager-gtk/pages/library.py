@@ -3,7 +3,7 @@ Página Videoteca: stats, búsqueda/filtros, tabla de juegos (con panel lateral
 de detalle + carátula al seleccionar uno) y "Añadir juego" / "Añadir
 GameCube". Equivalente a view-library del frontend web (scanDevice(),
 applyFilters(), renderGames(), addGame(), submitAddGC()). Además, copia los
-juegos seleccionados a otra unidad.
+juegos seleccionados a otra unidad y los extrae a una carpeta del PC.
 """
 import os
 import threading
@@ -92,7 +92,7 @@ class LibraryPage(Gtk.Box):
         self._search_text = ''
         self._current_path = ''
         self._busy = False  # hay una operación de añadir/copiar/eliminar en curso
-        self._copy_cancel = None  # threading.Event de la copia a otra unidad en curso
+        self._copy_cancel = None  # threading.Event de la copia a otra unidad (o extracción al PC) en curso
         self._covers = {}  # id → Gdk.Texture (o None si GameTDB no tiene carátula)
 
         self.append(self._build_stats())
@@ -181,6 +181,11 @@ class LibraryPage(Gtk.Box):
         self._copy_btn.connect('clicked', lambda *_: self._choose_copy_destination())
         box.append(self._copy_btn)
 
+        self._extract_btn = Gtk.Button(label='Extraer…', sensitive=False,
+                                       tooltip_text='Guardar los juegos seleccionados en una carpeta del PC')
+        self._extract_btn.connect('clicked', lambda *_: self._choose_extract_format())
+        box.append(self._extract_btn)
+
         self._remove_btn = Gtk.Button(label='Eliminar', css_classes=['destructive-action'], sensitive=False,
                                       tooltip_text='Eliminar los juegos seleccionados (Supr)')
         self._remove_btn.connect('clicked', lambda *_: self._confirm_remove())
@@ -232,6 +237,7 @@ class LibraryPage(Gtk.Box):
         self._add_gc_btn.set_sensitive(not busy)
         self._remove_btn.set_sensitive(not busy and bool(self._selected_items()))
         self._copy_btn.set_sensitive(not busy and bool(self._selected_items()))
+        self._extract_btn.set_sensitive(not busy and bool(self._selected_items()))
 
     def _poll_progress(self):
         """Mientras dura una operación, refleja en la barra el avance que da el backend."""
@@ -445,6 +451,7 @@ class LibraryPage(Gtk.Box):
         items = self._selected_items()
         self._remove_btn.set_sensitive(bool(items) and not self._busy)
         self._copy_btn.set_sensitive(bool(items) and not self._busy)
+        self._extract_btn.set_sensitive(bool(items) and not self._busy)
         self._detail_revealer.set_reveal_child(bool(items))
         if not items:
             return
@@ -588,7 +595,7 @@ class LibraryPage(Gtk.Box):
     def _on_cancel_copy(self):
         self._copy_cancel.set()
         self._status_cancel.set_sensitive(False)
-        self._status_label.set_label('Cancelando… Se descarta el juego que se estaba copiando.')
+        self._status_label.set_label('Cancelando… Se descarta el juego que estaba a medias.')
 
     def _on_copy_error(self, error):
         self._copy_cancel = None
@@ -611,6 +618,86 @@ class LibraryPage(Gtk.Box):
         text = ' · '.join(parts)
         if cancelled:
             self._report(f'Copia cancelada: {text}', 'err' if failed else '')
+        else:
+            self._report(('✗ ' if failed else '✓ ') + text, 'err' if failed else 'ok')
+
+    # ── Extraer juegos al PC ─────────────────────────────────────
+    def _choose_extract_format(self):
+        """«Extraer…»: pregunta el formato (si hay juegos de Wii) y después la carpeta de destino."""
+        items = self._selected_items()
+        if not items or self._busy:
+            return
+        if not self._current_path:
+            self._report('✗ Explora primero la unidad de la que quieres extraer', 'err')
+            return
+        games = [i.game for i in items]
+        if all(g.get('platform') == 'gc' for g in games):
+            # Los de GameCube se copian tal cual: no hay formato que elegir
+            self._choose_extract_folder(games, 'iso')
+            return
+        count = '1 juego' if len(games) == 1 else f'{len(games)} juegos'
+        dialog = Adw.AlertDialog(
+            heading=f'Extraer {count} al PC',
+            body=(f'{self._title_list(items)}\n\nTamaño total: {sum(i.size for i in items):.2f} GB. '
+                  'Los juegos siguen en la unidad. Elige el formato de los juegos de Wii '
+                  '(los de GameCube se copian tal cual):'))
+        formats = [('iso', 'ISO — imagen completa del disco, compatible con todo'),
+                   ('wbfs', 'WBFS — solo los datos usados, ocupa menos')]
+        dropdown = Gtk.DropDown.new_from_strings([text for _fmt, text in formats])
+        dialog.set_extra_child(dropdown)
+        dialog.add_response('cancel', 'Cancelar')
+        dialog.add_response('extract', 'Elegir carpeta…')
+        dialog.set_response_appearance('extract', Adw.ResponseAppearance.SUGGESTED)
+        dialog.set_default_response('extract')
+        dialog.set_close_response('cancel')
+
+        def on_response(_dialog, response):
+            if response == 'extract':
+                self._choose_extract_folder(games, formats[dropdown.get_selected()][0])
+
+        dialog.connect('response', on_response)
+        dialog.present(self.get_root())
+
+    def _choose_extract_folder(self, games, fmt):
+        """Pide la carpeta del PC en la que guardar los juegos y lanza la extracción."""
+        def on_response(dlg, result):
+            try:
+                folder = dlg.select_folder_finish(result)
+            except GLib.Error:
+                return  # diálogo cancelado
+            if folder and folder.get_path() and not self._busy:
+                self._start_extract(games, folder.get_path(), fmt)
+
+        Gtk.FileDialog(title='Carpeta en la que guardar los juegos').select_folder(self.get_root(), None, on_response)
+
+    def _start_extract(self, games, dest, fmt):
+        """Lanza la extracción en un hilo (migrate.extract()); se cancela igual que la copia a otra unidad."""
+        self._copy_cancel = threading.Event()
+        self._status_cancel.set_sensitive(True)
+        self._report(f'Extrayendo {len(games)} juego(s) a {dest}… Puede tardar, no desconectes la unidad.', 'info')
+
+        def on_game(n, total, game):  # llega desde el hilo de la extracción
+            GLib.idle_add(self._on_copy_game,
+                          f"Extrayendo {game.get('title', '?')} [{game.get('id', '?')}] ({n + 1} de {total})…")
+
+        run_async(migrate.extract, games, self._current_path, dest, fmt, self._copy_cancel, on_game,
+                  on_done=lambda result: self._on_extracted(dest, *result), on_error=self._on_copy_error)
+
+    def _on_extracted(self, dest, done, failed, cancelled, present):
+        """Informa del resultado de la extracción: extraídos, ya presentes y fallidos."""
+        self._copy_cancel = None
+        for game in done:
+            self._log.append(f"✓ Extraído {game['title']} [{game['id']}] → {game['target']}", 'ok')
+        for game, error in failed:
+            self._log.append(f"✗ No se pudo extraer {game['title']} [{game['id']}]: {error}", 'err')
+        parts = [f'{len(done)} juego(s) extraídos a {dest}']
+        if present:
+            parts.append(f'{len(present)} ya estaban en la carpeta')
+        if failed:
+            parts.append(f'{len(failed)} con errores; detalles en el terminal')
+        text = ' · '.join(parts)
+        if cancelled:
+            self._report(f'Extracción cancelada: {text}', 'err' if failed else '')
         else:
             self._report(('✗ ' if failed else '✓ ') + text, 'err' if failed else 'ok')
 
