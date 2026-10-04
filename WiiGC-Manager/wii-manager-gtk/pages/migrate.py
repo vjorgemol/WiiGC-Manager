@@ -18,10 +18,12 @@ GIB = 1024**3
 
 
 def _name(game):
+    """'Título [ID]', para los mensajes."""
     return f"{game.get('title', '?')} [{game.get('id', '?')}]"
 
 
 def _count(n):
+    """'1 juego' o 'N juegos'."""
     return '1 juego' if n == 1 else f'{n} juegos'
 
 
@@ -38,6 +40,11 @@ def run_migration(src, dst, delete_source, cancel, on_game):
 
 
 class MigratePage(Gtk.Box):
+    """
+    get_device_path() da la unidad explorada (el origen por defecto); on_migrated()
+    se llama al terminar, para recargar la Videoteca.
+    """
+
     def __init__(self, get_device_path, log, on_migrated=None):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         self.set_margin_top(16)
@@ -105,6 +112,7 @@ class MigratePage(Gtk.Box):
                   on_error=lambda e: self._set_summary(f'✗ {e}', 'error'))
 
     def set_devices(self, devices):
+        """Rellena los dos desplegables con las unidades conectadas, conservando la selección si sigue siendo válida."""
         if self._status.busy:
             return
         selected_src, selected_dst = self._selected(self._src_row), self._selected(self._dst_row)
@@ -129,10 +137,12 @@ class MigratePage(Gtk.Box):
         self._on_selection_changed()
 
     def _selected(self, row):
+        """Ruta de la unidad elegida en un desplegable ('' si no hay ninguna)."""
         pos = row.get_selected()
         return self._volumes[pos]['path'] if pos < len(self._volumes) else ''
 
     def _on_selection_changed(self):
+        """Al cambiar el origen o el destino: recalcula en un hilo qué hay que copiar (migrate.plan)."""
         if self._updating:
             return
         self._plan_serial += 1
@@ -152,6 +162,7 @@ class MigratePage(Gtk.Box):
 
     # ── Resumen de lo que se va a copiar ─────────────────────────
     def _on_planned(self, serial, todo, error=None):
+        """Muestra el resumen del plan y habilita «Migrar» solo si hay juegos por copiar y caben."""
         if serial != self._plan_serial or self._status.busy:
             return
         if error:
@@ -185,6 +196,7 @@ class MigratePage(Gtk.Box):
 
     # ── Migración ────────────────────────────────────────────────
     def _confirm(self):
+        """Si se van a eliminar los juegos del origen, pide confirmación antes de empezar."""
         src, dst = self._selected(self._src_row), self._selected(self._dst_row)
         if not self._delete_row.get_active():
             self._start(src, dst, False)
@@ -202,6 +214,7 @@ class MigratePage(Gtk.Box):
         dialog.present(self.get_root())
 
     def _start(self, src, dst, delete_source):
+        """Lanza la migración en un hilo y cambia «Migrar» por «Cancelar»."""
         if self._status.busy:
             return
         text = f'Migrando juegos de {src} a {dst}… Puede tardar mucho, no desconectes las unidades.'
@@ -231,6 +244,7 @@ class MigratePage(Gtk.Box):
         self._status.set_text('Cancelando… Se descarta el juego que se estaba copiando.')
 
     def _on_done(self, result):
+        """Resultado de run_migration(): detalle al terminal y resumen a la fila de estado."""
         copied, failed, cancelled, removed = result
         for game in copied:
             self._log.append(f'✓ Copiado {_name(game)}', 'ok')
@@ -254,6 +268,7 @@ class MigratePage(Gtk.Box):
             self._finish(('✗ ' if problems else '✓ ') + text, not problems)
 
     def _finish(self, text, ok):
+        """Restaura la página, avisa a la ventana y vuelve a comparar las unidades."""
         self._log.append(text, 'ok' if ok else 'err' if ok is False else 'info')
         self._group.set_sensitive(True)
         self._migrate_btn.set_visible(True)

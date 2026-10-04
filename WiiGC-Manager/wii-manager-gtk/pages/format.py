@@ -13,6 +13,12 @@ from widgets.device_row import DeviceRow
 
 
 class FormatPage(Gtk.Box):
+    """
+    on_formatted(ruta) se llama tras un formateo correcto, con la ruta por la que
+    explorar la unidad; get_device_path() da la unidad explorada, que es donde se
+    instalan los cargadores.
+    """
+
     def __init__(self, log, on_formatted=None, get_device_path=lambda: ''):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=16)
         self.set_margin_top(16)
@@ -71,12 +77,14 @@ class FormatPage(Gtk.Box):
         return group
 
     def refresh_devices(self):
+        """Vuelve a detectar discos y particiones y repinta la lista."""
         for child in list(self._device_list_box):
             self._device_list_box.remove(child)
         self._device_list_box.append(Gtk.Label(label='Detectando unidades de almacenamiento…'))
         run_async(core.get_block_devices, on_done=self._on_devices_loaded, on_error=self._on_devices_error)
 
     def _on_devices_loaded(self, devices):
+        """Pinta los dispositivos formateables; los del sistema ni se muestran."""
         for child in list(self._device_list_box):
             self._device_list_box.remove(child)
 
@@ -111,6 +119,7 @@ class FormatPage(Gtk.Box):
         self._device_list_box.append(Gtk.Label(label=f'Error al detectar dispositivos: {error}'))
 
     def _select_device(self, device):
+        """Clic en un dispositivo: queda como destino del formateo."""
         self._selected_device = device
         self._target_summary.set_text(
             f"{device['path']} — {device.get('model') or device['name']} — {device['size_formatted']}")
@@ -147,6 +156,7 @@ class FormatPage(Gtk.Box):
         return group
 
     def _on_fs_type_toggled(self, btn):
+        """La etiqueta y las carpetas solo se aplican al formatear en FAT32."""
         self._fs_type = 'fat32' if btn.get_active() else 'wbfs'
         sensitive = self._fs_type == 'fat32'
         self._label_row.set_sensitive(sensitive)
@@ -179,6 +189,7 @@ class FormatPage(Gtk.Box):
         return group
 
     def _poll_progress(self):
+        """Cada 200 ms durante el formateo: paso y porcentaje que publica el backend."""
         if not self._formatting:
             self._progress.set_visible(False)
             return GLib.SOURCE_REMOVE
@@ -189,6 +200,7 @@ class FormatPage(Gtk.Box):
         return GLib.SOURCE_CONTINUE
 
     def _show_result(self, lines, ok):
+        """Oculta la barra y deja a la vista el resultado del formateo, en verde o rojo."""
         self._formatting = False
         self._progress.set_visible(False)
         self._result_label.set_label('\n'.join(lines))
@@ -236,6 +248,7 @@ class FormatPage(Gtk.Box):
                   on_error=lambda e: self._on_loaders_status(path, {'error': str(e)}))
 
     def _on_loaders_status(self, path, data):
+        """Escribe en cada fila el estado de su cargador: no instalado, al día, desactualizado…"""
         if path != self._get_device_path():
             return  # se cambió de unidad mientras se consultaba
         for key, row in self._app_rows.items():
@@ -252,6 +265,7 @@ class FormatPage(Gtk.Box):
             }[info['state']])
 
     def _install_loaders(self):
+        """Descarga e instala en la unidad explorada los cargadores marcados."""
         path = self._get_device_path()
         keys = [key for key, row in self._app_rows.items() if row.get_active()]
         if not keys or self._loaders_status.busy:
@@ -280,6 +294,7 @@ class FormatPage(Gtk.Box):
         self.refresh_loaders()
 
     def _on_execute_clicked(self, _btn):
+        """Pide confirmación: el formateo borra todo el contenido de la unidad."""
         if not self._selected_device:
             return
         dev = self._selected_device
@@ -299,6 +314,7 @@ class FormatPage(Gtk.Box):
         dialog.present(self.get_root())
 
     def _on_confirm_response(self, dialog, response, dev, folders):
+        """Confirmado: lanza el formateo en un hilo y arranca el sondeo del progreso."""
         if response != 'format':
             return
         params = {

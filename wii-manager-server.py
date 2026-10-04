@@ -22,6 +22,20 @@ Rutas de la API:
     POST /api/extract           Extrae un juego a fichero ISO
     POST /api/verify            Verifica la integridad de juegos o archivos
     POST /api/run               Ejecuta un comando wwt/wit arbitrario
+    GET  /api/progress          Avance de la operación larga en curso
+    GET  /api/browse            Explora carpetas del equipo (selector de archivos)
+    GET  /api/devices           Discos y particiones, y cuáles se pueden formatear
+    POST /api/format            Formatea una unidad como FAT32 o WBFS
+    POST /api/nintendont/install  Instala Nintendont en una unidad
+    GET  /api/loaders/status    Cargadores instalados y si tienen versión nueva
+    POST /api/loaders/install   Instala o actualiza los cargadores
+    GET  /api/gamecube/inspect  Lee la cabecera de una imagen de GameCube
+    GET  /api/gamecube/list     Lista los juegos de GameCube de una unidad
+    POST /api/gamecube/add      Copia un juego de GameCube a la unidad
+    POST /api/gamecube/remove   Elimina un juego de GameCube
+
+    La tabla completa está en ROUTES. La app GTK4 (wii-manager-gtk/) no usa
+    el servidor HTTP: importa este fichero y llama a las funciones api_xxx.
 
 Seguridad:
     El servidor escucha solo en 127.0.0.1 (localhost), no es accesible
@@ -380,6 +394,7 @@ _write_progress = None   # {'stat_file', 'start', 'total'} de la copia en curso
 
 
 def _sectors_written(stat_file):
+    """Sectores escritos en el dispositivo desde el arranque (7.º campo de su archivo stat), o None si no se puede leer."""
     try:
         return int(Path(stat_file).read_text().split()[6])
     except (OSError, ValueError, IndexError):
@@ -515,6 +530,7 @@ DOLPHIN_MISSING = ('Para usar imágenes RVZ/GCZ hace falta Dolphin (dolphin-tool
 
 
 def is_dolphin_image(path):
+    """True si la extensión es la de un formato comprimido de Dolphin (RVZ/GCZ)."""
     return Path(str(path)).suffix.lower() in DOLPHIN_SUFFIXES
 
 
@@ -740,6 +756,7 @@ def api_add(params):
 
 
 def _api_add(params):
+    """Implementación de api_add para una imagen que wit/wwt saben leer (las RVZ/GCZ llegan ya convertidas a ISO)."""
     part = params.get('part', '').strip()
     src  = params.get('src',  '')
     wwt  = params.get('wwt',  which('wwt') or 'wwt')
@@ -1113,6 +1130,7 @@ def get_block_devices():
     system_mounts = {'/', '/boot', '/boot/efi', '/home', '[SWAP]', '/root', '/var', '/usr', '/etc'}
 
     def is_node_system(node):
+        """True si el nodo de lsblk, o alguna de sus particiones, está montado en una ruta del sistema."""
         mp = node.get('mountpoint')
         if mp and (mp in system_mounts or any(mp.startswith(p) for p in ('/boot', '/home', '/var', '/usr'))):
             return True
@@ -1326,6 +1344,10 @@ VERSION_MARKER = '.version_instalada'
 
 
 def _write_version_marker(app_dir, version):
+    """
+    Anota la versión instalada junto al cargador (ver VERSION_MARKER). Si no se
+    puede escribir, solo se pierde la detección de actualizaciones.
+    """
     try:
         (Path(app_dir) / VERSION_MARKER).write_text(version, encoding='utf-8')
     except OSError:
@@ -2006,6 +2028,7 @@ def api_gc_add(params):
 
 
 def _api_gc_add(params):
+    """Implementación de api_gc_add para una imagen ISO/GCM/CISO (las RVZ/GCZ llegan ya convertidas a ISO)."""
     src = params.get('src', '').strip()
     dest = params.get('dest', '').strip()
     disc = int(params.get('disc', 1))

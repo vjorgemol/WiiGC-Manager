@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WiiGC Manager — Manual de uso</title>
+<style>
+  :root {
+    --bg: #fafafa; --surface: #ffffff; --text: #1e1e24; --muted: #5e5c64;
+    --border: #deddda; --accent: #6a5fbb; --accent-soft: #eeecf9;
+    --code-bg: #f0eff2; --warn-bg: #fdf1e3; --warn-border: #e5a50a;
+    --ok: #26a269; --err: #c01c28; --nd: #b8860b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e22; --surface: #26262b; --text: #eeeeec; --muted: #a9a8ae;
+      --border: #3d3d44; --accent: #a79df0; --accent-soft: #2f2c45;
+      --code-bg: #303036; --warn-bg: #3a2f1c; --warn-border: #e5a50a;
+      --ok: #57e389; --err: #ff7b72; --nd: #f8e45c;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Cantarell, sans-serif;
+  }
+  .layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; }
+  nav {
+    position: sticky; top: 0; align-self: start; height: 100vh; overflow-y: auto;
+    padding: 28px 16px 28px 24px; border-right: 1px solid var(--border);
+  }
+  nav .brand { font-weight: 700; font-size: 1.1rem; margin-bottom: 2px; }
+  nav .version { color: var(--muted); font-size: .85rem; margin-bottom: 18px; }
+  nav ol { list-style: none; margin: 0; padding: 0; counter-reset: sec; }
+  nav li { counter-increment: sec; }
+  nav a {
+    display: block; padding: 6px 10px; border-radius: 6px;
+    color: var(--text); text-decoration: none; font-size: .93rem;
+  }
+  nav a::before { content: counter(sec) " · "; color: var(--muted); }
+  nav a:hover { background: var(--accent-soft); color: var(--accent); }
+  main { padding: 32px 40px 80px; min-width: 0; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 12px; }
+  h2 {
+    font-size: 1.5rem; margin: 56px 0 14px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent);
+  }
+  h3 { font-size: 1.12rem; margin: 30px 0 8px; }
+  p, ul, ol { margin: 0 0 14px; }
+  li { margin-bottom: 5px; }
+  a { color: var(--accent); }
+  .lead { font-size: 1.08rem; color: var(--muted); }
+  code {
+    font: .88em ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+    background: var(--code-bg); padding: 2px 5px; border-radius: 4px; overflow-wrap: anywhere;
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; overflow-x: auto; margin: 0 0 16px;
+  }
+  pre code { background: none; padding: 0; overflow-wrap: normal; }
+  .table-wrap { overflow-x: auto; margin: 0 0 16px; }
+  table { border-collapse: collapse; width: 100%; font-size: .95rem; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; text-transform: uppercase; letter-spacing: .03em; }
+  figure { margin: 20px 0 24px; }
+  figure img { display: block; max-width: 100%; height: auto; border: 1px solid var(--border); border-radius: 10px; }
+  figcaption { color: var(--muted); font-size: .88rem; margin-top: 6px; text-align: center; }
+  .warn {
+    background: var(--warn-bg); border-left: 4px solid var(--warn-border);
+    padding: 12px 16px; border-radius: 6px; margin: 0 0 16px; font-weight: 600;
+  }
+  .tag { font-weight: 700; font-size: .85rem; }
+  .tag.ok { color: var(--ok); } .tag.err { color: var(--err); } .tag.nd { color: var(--nd); }
+  dl.faq dt { font-weight: 700; margin-top: 18px; }
+  dl.faq dd { margin: 4px 0 0; }
+  dl.faq dd pre { margin-top: 8px; }
+  @media (max-width: 820px) {
+    .layout { display: block; }
+    nav { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--border); padding: 20px 16px; }
+    main { padding: 24px 16px 60px; }
+  }
+  @media print {
+    nav { display: none; }
+    .layout { display: block; }
+    main { padding: 0; }
+    h2 { break-after: avoid; }
+    figure, table, pre { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav>
+  <div class="brand">WiiGC Manager</div>
+  <div class="version">Manual de uso · versión 1.1.1</div>
+  <ol>
+    <li><a href="#instalacion">Requisitos e instalación</a></li>
+    <li><a href="#primeros-pasos">Primeros pasos</a></li>
+    <li><a href="#ventana">La ventana</a></li>
+    <li><a href="#videoteca">Videoteca</a></li>
+    <li><a href="#formatear">Formatear / Preparar</a></li>
+    <li><a href="#convertir">Convertir</a></li>
+    <li><a href="#migrar">Migrar</a></li>
+    <li><a href="#verificar">Verificar</a></li>
+    <li><a href="#ajustes">Ajustes</a></li>
+    <li><a href="#problemas">Solución de problemas</a></li>
+    <li><a href="#web">Versión web</a></li>
+    <li><a href="#referencia">Referencia</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<h1>WiiGC Manager — Manual de uso</h1>
+<p class="lead">WiiGC Manager gestiona la colección de juegos de <strong>Wii</strong> y <strong>GameCube</strong> de una unidad USB o tarjeta SD: los añade, elimina, convierte, verifica y copia a otra unidad, y prepara la unidad para usarla en la consola con WiiFlow, USB Loader GX y Nintendont.</p>
+<p>Este manual describe la aplicación de escritorio (GTK4, versión 1.1.1). La versión web original, que comparte el mismo motor, se resume <a href="#web">al final</a>.</p>
+
+<figure>
+  <img src="WiiGC-Manager/flatpak/screenshots/videoteca.png" alt="Ventana de WiiGC Manager en la vista Videoteca">
+  <figcaption>Videoteca con la carátula y los datos del juego seleccionado</figcaption>
+</figure>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="instalacion">1. Requisitos e instalación</h2>
+
+<h3>Qué hace falta</h3>
+<div class="table-wrap"><table>
+  <tr><th>Componente</th><th>Para qué</th><th>Obligatorio</th></tr>
+  <tr><td>Linux con GTK 4 y libadwaita</td><td>La interfaz</td><td>Sí</td></tr>
+  <tr><td>Python 3.8 o posterior, con PyGObject</td><td>Ejecutar la app</td><td>Sí</td></tr>
+  <tr><td><code>wit</code> y <code>wwt</code> (<a href="https://wit.wiimm.de/">Wiimms ISO Tools</a>)</td><td>Leer, copiar, convertir y verificar juegos de Wii</td><td>Sí</td></tr>
+  <tr><td>Dolphin (<code>dolphin-tool</code>)</td><td>Añadir imágenes RVZ o GCZ</td><td>Solo para esos formatos</td></tr>
+  <tr><td>Conexión a internet</td><td>Carátulas, compañía y fecha de lanzamiento, descarga de cargadores</td><td>No</td></tr>
+</table></div>
+
+<p>En Fedora, la parte gráfica se instala con:</p>
+<pre><code>sudo dnf install python3-gobject gtk4 libadwaita</code></pre>
+<p><code>wit</code> y <code>wwt</code> se descargan de <a href="https://wit.wiimm.de/download.html">wit.wiimm.de/download.html</a> y deben quedar en el <code>PATH</code> (por ejemplo, en <code>/usr/local/bin</code>). Dolphin puede ser el del sistema o el Flatpak <code>org.DolphinEmu.dolphin-emu</code>.</p>
+
+<h3>Ejecutar desde el código fuente</h3>
+<pre><code>git clone https://github.com/vjorgemol/wii-manager.git
+cd wii-manager
+./run-gtk.sh</code></pre>
+
+<h3>Instalar como Flatpak</h3>
+<pre><code>cd WiiGC-Manager/flatpak
+./build.sh
+flatpak install --user WiiGC-Manager.flatpak</code></pre>
+<p>Después aparece como <strong>WiiGC Manager</strong> en el menú de aplicaciones. El Flatpak usa el <code>wit</code>, el <code>wwt</code> y el Dolphin instalados en el sistema: no los incluye.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="primeros-pasos">2. Primeros pasos</h2>
+
+<h3>Con una unidad ya preparada</h3>
+<ol>
+  <li>Conecta la unidad USB o la tarjeta SD. Si es FAT32 o NTFS, deja que el sistema la monte.</li>
+  <li>Abre WiiGC Manager. Si hay una sola unidad USB conectada, la app la detecta, escribe su ruta en el panel lateral y muestra sus juegos en la Videoteca.</li>
+  <li>Si no la detecta (hay varias unidades, o la unidad tiene varias particiones), escribe la ruta en <strong>Ruta WFS / USB / FAT32</strong> o elígela con el botón de la carpeta, y pulsa <strong>Explorar dispositivo</strong>.</li>
+</ol>
+
+<h3>Con una unidad nueva</h3>
+<ol>
+  <li>Ve a <strong>Formatear / Preparar</strong>, selecciona la unidad y formatéala como FAT32 con las carpetas creadas (<a href="#formatear">apartado 5</a>).</li>
+  <li>En la misma página, instala los cargadores que vayas a usar.</li>
+  <li>Vuelve a <strong>Videoteca</strong> y añade juegos con <strong>+ Añadir Wii</strong> y <strong>+ Añadir GameCube</strong>.</li>
+</ol>
+
+<h3>Qué ruta poner</h3>
+<div class="table-wrap"><table>
+  <tr><th>Tipo de unidad</th><th>Ruta</th><th>Ejemplo</th></tr>
+  <tr><td>FAT32 o NTFS montada</td><td>Su punto de montaje</td><td><code>/run/media/usuario/WII</code></td></tr>
+  <tr><td>Partición WBFS</td><td>El dispositivo</td><td><code>/dev/sdb1</code></td></tr>
+  <tr><td>Sin ruta</td><td>La detecta <code>wwt</code> (solo particiones WBFS)</td><td>—</td></tr>
+</table></div>
+
+<h3>Cómo se guardan los juegos</h3>
+<p>En una unidad FAT32 o NTFS, la app usa la estructura que esperan los cargadores:</p>
+<pre><code>/wbfs/Título del juego [ID]/ID.wbfs          juegos de Wii
+/games/Título del juego [ID]/game.iso        juegos de GameCube
+/games/Título del juego [ID]/disc2.iso       segundo disco, si lo hay
+/apps/                                       cargadores (WiiFlow, USB Loader GX, Nintendont)</code></pre>
+<p>Los juegos de Wii de más de 4 GB se parten automáticamente en varios archivos, porque FAT32 no admite archivos mayores.</p>
+<p>Una partición <strong>WBFS</strong> solo admite juegos de Wii y no se monta: se gestiona entera con <code>wwt</code>.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="ventana">3. La ventana</h2>
+<ul>
+  <li><strong>Panel lateral, arriba</strong>: las seis vistas (Videoteca, Formatear / Preparar, Convertir, Migrar, Verificar, Ajustes). En la Videoteca aparecen además los <strong>Filtros</strong>.</li>
+  <li><strong>Panel lateral, abajo</strong>: la ruta de la unidad con la que se trabaja y el botón <strong>Explorar dispositivo</strong>. Todas las vistas usan esa unidad.</li>
+  <li><strong>Cabecera</strong>: el botón de información abre «Acerca de» (versión y novedades); el del sol o la luna cambia entre tema claro y oscuro.</li>
+  <li><strong>Terminal</strong>: un panel inferior opcional con los comandos ejecutados y su salida. Se activa en <strong>Ajustes → Mostrar terminal de resultados</strong>. Es el primer sitio donde mirar cuando algo falla.</li>
+</ul>
+<p>En ventanas estrechas, el panel lateral se pliega y se navega entre él y el contenido.</p>
+<p>La app es de instancia única: si ya está abierta, lanzarla otra vez solo trae su ventana al frente.</p>
+<p>Si cierras la ventana mientras se copia o elimina un juego, la app avisa antes: cerrar interrumpe la operación y el juego queda incompleto.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="videoteca">4. Videoteca</h2>
+
+<h3>Indicadores</h3>
+<p>Arriba se muestran los juegos totales, los de Wii, los de GameCube y los multidisco, y debajo el espacio usado, el disponible y el que ocupan los juegos de GameCube.</p>
+
+<h3>Tabla de juegos</h3>
+<p>Cada fila muestra título, compañía, plataforma, tamaño y fecha de lanzamiento. La compañía y la fecha vienen de GameTDB; sin conexión, esas columnas quedan vacías.</p>
+<ul>
+  <li><strong>Ordenar</strong>: clic en la cabecera de una columna.</li>
+  <li><strong>Buscar</strong>: escribe parte del título o del ID en el campo de búsqueda.</li>
+  <li><strong>Filtrar</strong>: en el panel lateral, por plataforma (Wii, GameCube) o por formato (WBFS, ISO / GCM).</li>
+  <li><strong>Seleccionar varios</strong>: Ctrl + clic o Mayús + clic.</li>
+</ul>
+
+<h3>Panel de detalle</h3>
+<p>Al seleccionar un juego se abre a la derecha su ficha: carátula, ID, compañía, plataforma, región, formato, tamaño, lanzamiento y número de discos. Con varios juegos seleccionados muestra el total que ocupan y la lista de títulos.</p>
+
+<h3>Añadir juegos</h3>
+<p>Explora antes la unidad de destino. Luego:</p>
+<ul>
+  <li><strong>+ Añadir Wii</strong> admite <code>.iso</code>, <code>.wbfs</code>, <code>.wdf</code>, <code>.rvz</code> y <code>.gcz</code>.</li>
+  <li><strong>+ Añadir GameCube</strong> admite <code>.iso</code>, <code>.gcm</code>, <code>.ciso</code>, <code>.rvz</code> y <code>.gcz</code>.</li>
+</ul>
+<p>La app comprueba la imagen, muestra su título, ID, región y tamaño, y la copia a la unidad. Una copia puede tardar varios minutos: la fila de estado muestra el avance. <strong>No desconectes la unidad</strong> hasta que termine.</p>
+<p>Detalles útiles:</p>
+<ul>
+  <li>Las imágenes RVZ y GCZ se convierten antes a ISO con Dolphin, porque ni los cargadores ni <code>wit</code> las leen.</li>
+  <li>En los juegos de GameCube, el número de disco se lee de la propia imagen. Si el juego tiene dos discos, la app avisa de que falta el otro.</li>
+  <li>Si el juego de Wii ya está en la unidad, no se vuelve a copiar.</li>
+  <li>Solo se hace una operación de escritura a la vez: mientras dura, los botones de añadir, copiar y eliminar quedan desactivados.</li>
+</ul>
+
+<h3>Eliminar juegos</h3>
+<p>Selecciona uno o varios y pulsa <strong>Eliminar</strong> o la tecla <strong>Supr</strong>. La app pide confirmación e indica cuánto espacio se libera. <strong>No se puede deshacer.</strong></p>
+
+<h3>Copiar a otra unidad</h3>
+<p>Selecciona los juegos y pulsa <strong>Copiar a…</strong>. Elige la unidad de destino en el desplegable y confirma.</p>
+<ul>
+  <li>Los juegos que ya están en el destino se omiten.</li>
+  <li>Los de GameCube no se pueden copiar a una partición WBFS.</li>
+  <li><strong>Cancelar</strong> detiene la copia y descarta el juego que estaba a medias; los ya copiados se conservan.</li>
+</ul>
+<p>Para copiar toda la colección, usa <a href="#migrar">Migrar</a>.</p>
+
+<h3>Carátulas</h3>
+<p>La carátula se descarga de GameTDB al seleccionar el juego, con la región y el tipo elegidos en Ajustes. Si no existe esa combinación, la app prueba con otras regiones y tipos.</p>
+<p><strong>Doble clic en la carátula</strong> permite:</p>
+<ul>
+  <li><strong>Guardar…</strong>: la guarda como PNG.</li>
+  <li><strong>Imprimir…</strong>: imprime la carátula completa (portada, lomo y contraportada) a 273 × 183 mm, el tamaño de una funda de DVD, apaisada y con marcas de corte. Si la hoja es más pequeña, se reduce y se avisa.</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="formatear">5. Formatear / Preparar</h2>
+<p class="warn">⚠ El formateo borra todo el contenido de la unidad o partición elegida.</p>
+
+<h3>Formatear</h3>
+<ol>
+  <li><strong>Seleccionar unidad o partición.</strong> La lista solo muestra unidades ajenas al sistema: los discos donde está instalado Linux no aparecen y no se pueden formatear. Pulsa <strong>Actualizar unidades</strong> si acabas de conectar la tuya.</li>
+  <li><strong>Sistema de archivos y estructura.</strong>
+    <div class="table-wrap"><table>
+      <tr><th>Opción</th><th>Cuándo usarla</th></tr>
+      <tr><td><strong>FAT32</strong> (recomendado)</td><td>Wii y GameCube en la misma unidad</td></tr>
+      <tr><td><strong>WBFS puro</strong></td><td>Solo Wii, en una partición gestionada por <code>wwt</code></td></tr>
+    </table></div>
+    En FAT32 puedes elegir la <strong>etiqueta del volumen</strong> (por defecto, <code>WII</code>) y <strong>crear las carpetas</strong> <code>/wbfs</code>, <code>/games</code>, <code>/apps</code> y <code>/wiiflow</code>, junto con un archivo <code>LEEME_WIIFLOW.txt</code> que explica dónde va cada cosa.</li>
+  <li><strong>Ejecutar.</strong> Pulsa <strong>Formatear y preparar unidad seleccionada</strong> y confirma.</li>
+</ol>
+<p>Si tu usuario no tiene permiso sobre el dispositivo, el sistema pide la contraseña de administrador. Al terminar, la unidad queda montada y la Videoteca pasa a mostrarla.</p>
+
+<h3>Instalar o actualizar cargadores</h3>
+<p>La sección <strong>4 · Instalar o actualizar cargadores</strong> descarga <strong>Nintendont</strong>, <strong>WiiFlow Lite</strong> y <strong>USB Loader GX</strong> en la unidad explorada, <strong>sin formatear ni borrar nada</strong>.</p>
+<ul>
+  <li>Cada fila indica si el cargador está instalado, qué versión tiene y si hay una más nueva.</li>
+  <li>Desmarca los que no quieras y pulsa <strong>Instalar / actualizar en la unidad</strong>.</li>
+  <li>Los que ya están en su última versión se dejan como están.</li>
+</ul>
+<p>Necesita conexión a internet y una unidad montada (FAT32): no funciona sobre una partición WBFS.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="convertir">6. Convertir</h2>
+<figure>
+  <img src="WiiGC-Manager/flatpak/screenshots/convertir.png" alt="Vista Convertir con sus tres pestañas">
+  <figcaption>Conversión entre ISO y WBFS</figcaption>
+</figure>
+<p>Convierte imágenes de Wii entre formatos, sin tocar la unidad. Tiene tres pestañas; solo se hace una conversión a la vez.</p>
+
+<h3>ISO → WBFS</h3>
+<ol>
+  <li>Elige la imagen de origen.</li>
+  <li>Elige el archivo de destino, o déjalo vacío para crearlo junto al origen con el mismo nombre.</li>
+  <li>En <strong>Opciones</strong>, elige <strong>Split en varios archivos</strong> si el destino es FAT32 y el juego supera los 4 GB. Las otras dos opciones hacen una conversión normal.</li>
+  <li>Pulsa <strong>Convertir</strong>.</li>
+</ol>
+
+<h3>WBFS → ISO</h3>
+<p>Igual que la anterior, con estas opciones de salida:</p>
+<div class="table-wrap"><table>
+  <tr><th>Opción</th><th>Resultado</th></tr>
+  <tr><td>ISO estándar</td><td>Un archivo <code>.iso</code></td></tr>
+  <tr><td>WBFS en lugar de ISO</td><td>Un archivo <code>.wbfs</code></td></tr>
+  <tr><td>ISO partida (FAT32)</td><td>Una ISO en trozos de menos de 4 GB</td></tr>
+</table></div>
+
+<h3>Lote</h3>
+<p>Convierte a WBFS todos los <code>.iso</code> de una carpeta. Cada uno conserva su nombre, en la carpeta de destino o, si no eliges ninguna, junto al propio ISO. Los que ya tienen su <code>.wbfs</code> se saltan y aparecen como error en el resumen.</p>
+<p>La app nunca sobrescribe un destino sin que lo hayas elegido tú: si el archivo por defecto ya existe, pide otro.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="migrar">7. Migrar</h2>
+<p>Copia <strong>todos</strong> los juegos de una unidad a otra; por ejemplo, al pasar a un disco de más capacidad.</p>
+<ol>
+  <li>Conecta las dos unidades. Las FAT32 y NTFS tienen que estar montadas.</li>
+  <li>Elige la <strong>unidad de origen</strong> y la <strong>unidad de destino</strong>. Por defecto, el origen es la unidad explorada.</li>
+  <li>Lee el resumen: cuántos juegos hay por copiar y cuánto ocupan, cuántos ya están en el destino y cuánto espacio libre queda. Si no caben, el botón <strong>Migrar</strong> queda desactivado.</li>
+  <li>Opcional: activa <strong>Eliminar del origen los juegos migrados</strong>. Solo se eliminan los copiados correctamente, una vez terminada toda la copia, y nunca si cancelas. La app pide confirmación.</li>
+  <li>Pulsa <strong>Migrar</strong>.</li>
+</ol>
+<p>Durante la migración se muestra el juego en curso y el avance global. <strong>Cancelar</strong> descarta el juego que se estaba copiando y conserva los anteriores. Puedes repetir la migración más tarde: solo se copia lo que falte.</p>
+<p>Los juegos de GameCube no se pueden migrar a una partición WBFS; el resumen indica cuántos quedan fuera.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="verificar">8. Verificar</h2>
+<p>Comprueba que las imágenes no están dañadas.</p>
+<ul>
+  <li><strong>Un juego de la unidad</strong>: elígelo en el desplegable y pulsa <strong>Verificar</strong>.</li>
+  <li><strong>Un archivo suelto</strong>: elige <strong>Otro archivo (ISO / WBFS / GCM)…</strong>, selecciona el archivo y pulsa <strong>Verificar</strong>.</li>
+  <li><strong>Toda la unidad</strong>: pulsa <strong>Verificar todos</strong>.</li>
+</ul>
+<p>Cada resultado lleva una etiqueta:</p>
+<div class="table-wrap"><table>
+  <tr><th>Etiqueta</th><th>Significado</th></tr>
+  <tr><td><span class="tag ok">OK</span></td><td>La imagen es correcta</td></tr>
+  <tr><td><span class="tag err">ERR</span></td><td>La imagen está dañada o modificada</td></tr>
+  <tr><td><span class="tag nd">N/D</span></td><td>No se ha podido comprobar</td></tr>
+</table></div>
+<p>Cómo se verifica cada plataforma:</p>
+<ul>
+  <li><strong>Wii</strong>: los discos llevan sus propias sumas de comprobación, que <code>wit</code> y <code>wwt</code> recalculan.</li>
+  <li><strong>GameCube</strong>: los discos no las llevan. La app calcula el SHA1 de la imagen y lo compara con los volcados conocidos que publica GameTDB.</li>
+</ul>
+<p>Por eso un juego de GameCube sale como <span class="tag nd">N/D</span> en dos casos: GameTDB no tiene sumas de ese juego, o la imagen es un <strong>CISO</strong> (compactada), que nunca coincide con el volcado original. Solo se pueden verificar las ISO o GCM completas.</p>
+<p>Verificar lee la imagen entera: cuenta con varios minutos por juego en una unidad USB.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="ajustes">9. Ajustes</h2>
+<div class="table-wrap"><table>
+  <tr><th>Ajuste</th><th>Efecto</th></tr>
+  <tr><td><strong>Mostrar terminal de resultados</strong></td><td>Abre el panel inferior con los comandos y su salida. Se aplica al instante.</td></tr>
+  <tr><td><strong>Ruta de wit / Ruta de wwt</strong></td><td><strong>Detectar</strong> muestra dónde están instaladas. La app localiza las herramientas en el <code>PATH</code> por su cuenta, así que sirve para comprobar que están disponibles.</td></tr>
+  <tr><td><strong>Ruta WFS / USB</strong></td><td>Unidad que aparece en el panel lateral al abrir la app.</td></tr>
+  <tr><td><strong>Región preferida</strong></td><td>Región de la carátula que se pide primero.</td></tr>
+  <tr><td><strong>Tipo de carátula</strong></td><td>3D, plana, disco o completa.</td></tr>
+</table></div>
+<p>Las rutas se guardan con <strong>Guardar</strong>. La región y el tipo de carátula se aplican al cambiarlos.</p>
+<p>Los ajustes se guardan en <code>~/.config/wii-manager-gtk/settings.json</code>.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="problemas">10. Solución de problemas</h2>
+<dl class="faq">
+  <dt>La app no detecta la unidad</dt>
+  <dd>La autodetección solo actúa cuando hay exactamente una unidad USB con una sola partición utilizable. En otro caso, indica la ruta a mano. Una unidad FAT32 o NTFS sin montar no se puede explorar: móntala desde Archivos.</dd>
+
+  <dt>«No se puede leer /dev/sdX» en una partición WBFS</dt>
+  <dd>Tu usuario no tiene permiso sobre el dispositivo. Añádelo al grupo <code>disk</code> y vuelve a iniciar sesión:
+    <pre><code>sudo usermod -aG disk $USER</code></pre></dd>
+
+  <dt>No encuentra <code>wit</code> o <code>wwt</code></dt>
+  <dd>Comprueba en Ajustes, con <strong>Detectar</strong>, que están instalados. Si no aparecen, instálalos y asegúrate de que están en el <code>PATH</code>.</dd>
+
+  <dt>No puedo añadir un RVZ o un GCZ</dt>
+  <dd>Hace falta Dolphin: instálalo desde Software o con <code>flatpak install org.DolphinEmu.dolphin-emu</code>.</dd>
+
+  <dt>No aparecen carátulas, compañías ni fechas</dt>
+  <dd>Vienen de GameTDB y necesitan conexión. Si un juego no tiene carátula, la app lo recuerda una semana antes de volver a preguntar.</dd>
+
+  <dt>«No caben en el destino»</dt>
+  <dd>El destino no tiene espacio para lo que falta por copiar. Libera espacio o copia menos juegos con <strong>Copiar a…</strong> desde la Videoteca.</dd>
+
+  <dt>Un juego de GameCube no se copia a la otra unidad</dt>
+  <dd>El destino es una partición WBFS, que solo admite juegos de Wii.</dd>
+
+  <dt>La barra de progreso no muestra porcentaje</dt>
+  <dd>En algunas unidades no se puede medir el avance; la barra indica solo que la operación sigue en curso.</dd>
+
+  <dt>Algo ha fallado y el mensaje no basta</dt>
+  <dd>Activa el terminal de resultados en Ajustes y repite la operación: verás el comando exacto y lo que respondió.</dd>
+</dl>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="web">11. Versión web</h2>
+<p>La versión original funciona en el navegador y gestiona juegos de Wii y GameCube con el mismo motor. No incluye <strong>Migrar</strong> ni <strong>Copiar a…</strong>.</p>
+<pre><code>./launch.sh            # arranca el servidor y abre el navegador
+./launch.sh --status   # indica si el servidor está en marcha
+./launch.sh --log      # muestra el registro del servidor
+./launch.sh --restart  # lo reinicia
+./launch.sh --stop     # lo detiene</code></pre>
+<p>La interfaz queda en <code>http://localhost:8765</code> y solo es accesible desde el propio equipo. El archivo <code>README.md</code> describe su API.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="referencia">12. Referencia</h2>
+
+<h3>Formatos admitidos</h3>
+<div class="table-wrap"><table>
+  <tr><th>Formato</th><th>Wii</th><th>GameCube</th><th>Notas</th></tr>
+  <tr><td><code>.iso</code></td><td>Sí</td><td>Sí</td><td></td></tr>
+  <tr><td><code>.wbfs</code></td><td>Sí</td><td>—</td><td>El que usan los cargadores de Wii</td></tr>
+  <tr><td><code>.wdf</code></td><td>Sí</td><td>—</td><td></td></tr>
+  <tr><td><code>.gcm</code></td><td>—</td><td>Sí</td><td></td></tr>
+  <tr><td><code>.ciso</code></td><td>—</td><td>Sí</td><td>No se puede verificar</td></tr>
+  <tr><td><code>.rvz</code>, <code>.gcz</code></td><td>Sí</td><td>Sí</td><td>Requieren Dolphin; se convierten a ISO al añadirlos</td></tr>
+</table></div>
+
+<h3>Archivos que usa la app</h3>
+<div class="table-wrap"><table>
+  <tr><th>Ruta</th><th>Contenido</th></tr>
+  <tr><td><code>~/.config/wii-manager-gtk/settings.json</code></td><td>Ajustes</td></tr>
+  <tr><td><code>~/.cache/wii-manager-gtk/covers/</code></td><td>Carátulas descargadas</td></tr>
+  <tr><td><code>~/.cache/wii-manager-gtk/gametdb.json</code></td><td>Base de datos de GameTDB (se renueva cada 30 días)</td></tr>
+  <tr><td><code>~/.cache/wii-manager/tmp/</code></td><td>ISO temporales de las conversiones RVZ/GCZ</td></tr>
+</table></div>
+<p>Borrar la carpeta <code>~/.cache/wii-manager-gtk/</code> es seguro: la app vuelve a descargar lo que necesite.</p>
+
+<h3>Atajos</h3>
+<div class="table-wrap"><table>
+  <tr><th>Acción</th><th>Atajo</th></tr>
+  <tr><td>Eliminar los juegos seleccionados</td><td>Supr</td></tr>
+  <tr><td>Seleccionar varios juegos</td><td>Ctrl + clic, Mayús + clic</td></tr>
+  <tr><td>Explorar la ruta escrita</td><td>Intro en el campo de ruta</td></tr>
+  <tr><td>Guardar o imprimir la carátula</td><td>Doble clic en la carátula</td></tr>
+</table></div>
+
+</main>
+</div>
+</body>
+</html>

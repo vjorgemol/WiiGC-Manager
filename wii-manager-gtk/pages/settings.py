@@ -11,6 +11,7 @@ from gi.repository import Gtk, Adw
 
 from backend import core, run_async
 
+# Códigos de GameTDB y sus textos en los desplegables (mismo orden en cada pareja de listas)
 COVER_REGIONS = ['ES', 'EN', 'DE', 'FR', 'IT', 'PT', 'US', 'JA']
 COVER_REGION_LABELS = ['España (ES)', 'English (EN)', 'Deutschland (DE)', 'France (FR)',
                         'Italia (IT)', 'Portugal (PT)', 'USA (US)', 'Japan (JA)']
@@ -19,6 +20,11 @@ COVER_TYPE_LABELS = ['3D Cover', 'Cover plano', 'Disco', 'Cover completo']
 
 
 class SettingsPage(Gtk.Box):
+    """
+    settings es el dict de MainWindow y se modifica en el sitio; cada cambio se
+    notifica por su callback, que recibe ese mismo dict.
+    """
+
     def __init__(self, settings: dict, on_save=None, on_toggle_terminal=None, on_cover_prefs_changed=None):
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self._settings = settings
@@ -85,6 +91,7 @@ class SettingsPage(Gtk.Box):
         return group
 
     def _detect_tool(self, tool, row):
+        """Busca la herramienta en el sistema (core.api_status) y, si aparece, pone su ruta en la fila."""
         def on_done(data):
             path = data.get(tool)
             if path:

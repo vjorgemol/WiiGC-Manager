@@ -21,6 +21,7 @@ _MAX_AGE = 30 * 24 * 3600  # la base de datos cambia poco: refrescar una vez al 
 
 _CACHE_VERSION = 2          # 2: añade las sumas SHA1 de los volcados (roms)
 
+# En memoria: { companies: { código: nombre }, games: { ID: (compañía, fecha ISO, volcados) } }
 _db = {'companies': {}, 'games': {}}
 
 
@@ -79,6 +80,7 @@ def format_date(iso):
 
 
 def _read_cache():
+    """La caché en disco, o None si no existe, está dañada o es de otra versión del formato."""
     try:
         data = json.loads(_CACHE_PATH.read_text())
         return data if data.get('games') and data.get('version') == _CACHE_VERSION else None
@@ -87,6 +89,7 @@ def _read_cache():
 
 
 def _download(timeout):
+    """Descarga wiitdb.zip y reduce su XML a las compañías y, por juego, compañía, fecha y volcados conocidos."""
     with urllib.request.urlopen(_URL, timeout=timeout) as resp:
         archive = zipfile.ZipFile(io.BytesIO(resp.read()))
     companies, games = {}, {}
@@ -100,11 +103,12 @@ def _download(timeout):
                     known = [(r.get('version', ''), int(r.get('size') or 0), r.get('sha1', '').lower())
                              for r in elem.findall('rom') if r.get('sha1')]
                     games[game_id] = ((elem.findtext('publisher') or '').strip(), _iso_date(elem.find('date')), known)
-                elem.clear()
+                elem.clear()  # el XML es grande: se suelta cada nodo ya leído
     return {'version': _CACHE_VERSION, 'companies': companies, 'games': games}
 
 
 def _iso_date(elem):
+    """<date year=… month=… day=…> → 'AAAA-MM-DD'; el mes o el día desconocidos quedan a 00 (ver format_date)."""
     if elem is None or not (elem.get('year') or '').isdigit():
         return ''
     month, day = elem.get('month') or '', elem.get('day') or ''

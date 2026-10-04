@@ -4,6 +4,8 @@ GUI web para gestionar juegos Wii en particiones WBFS/USB, construida sobre las 
 
 > Funciona exclusivamente en **Linux**. Requiere Python 3 y tener `wit`/`wwt` instalados.
 
+📖 **[Manual de uso](MANUAL.html)** de la app de escritorio (WiiGC Manager, GTK4): instalación, Videoteca, formateo, conversión, migración y verificación.
+
 ---
 
 ## Características

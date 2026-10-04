@@ -11,14 +11,15 @@ _CONFIG_PATH = Path.home() / '.config' / 'wii-manager-gtk' / 'settings.json'
 DEFAULTS = {
     'wit_path': '',
     'wwt_path': '',
-    'wfs_path': '',
-    'cover_region': 'ES',
+    'wfs_path': '',            # unidad que aparece en el panel lateral al arrancar
+    'cover_region': 'ES',      # región y tipo de carátula que se piden primero a GameTDB
     'cover_type': 'cover3D',
-    'show_terminal': False,
+    'show_terminal': False,    # panel inferior con la salida de los comandos
 }
 
 
 def load():
+    """Ajustes guardados sobre los valores por defecto; las claves desconocidas del archivo se ignoran."""
     try:
         data = json.loads(_CONFIG_PATH.read_text())
     except Exception:
@@ -29,5 +30,6 @@ def load():
 
 
 def save(settings):
+    """Escribe los ajustes, creando la carpeta de configuración si no existe."""
     _CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
     _CONFIG_PATH.write_text(json.dumps(settings, indent=2))

@@ -53,6 +53,7 @@ def _disc_text(meta):
 
 
 def _preview_text(meta):
+    """Resumen en una línea de la imagen inspeccionada: título · ID · región · tamaño · disco."""
     size = meta.get('size_gb')
     parts = [meta.get('title', '—'), f"ID: {meta.get('id', '—')}", f"Región: {meta.get('region', '—')}",
              f'{size:.2f} GB' if size else '—', _disc_text(meta)]
@@ -86,6 +87,10 @@ def _pick_image(root, current_path, log, title, filters, inspect, add):
 # ── Añadir juego Wii ─────────────────────────────────────────────────
 
 def open_add_game_dialog(root, current_path, log, on_added=None):
+    """
+    Elige una imagen de Wii y la añade a la unidad explorada (current_path).
+    on_added() se llama si se ha añadido.
+    """
     def add(src, _meta):
         def on_done(data):
             if data.get('rc') == 0:
@@ -106,6 +111,10 @@ def open_add_game_dialog(root, current_path, log, on_added=None):
 # ── Añadir juego GameCube ────────────────────────────────────────────
 
 def open_add_gc_dialog(root, current_path, log, on_added=None):
+    """
+    Elige una imagen de GameCube y la copia a /games de la unidad explorada, como
+    game.iso o disc2.iso según su número de disco. on_added() se llama si se ha añadido.
+    """
     def add(src, meta):
         # Número de disco leído de la propia imagen
         disc = meta['disc'] if meta.get('disc') in (1, 2) else 1

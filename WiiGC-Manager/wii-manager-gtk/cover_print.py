@@ -17,6 +17,7 @@ INSERT_HEIGHT_MM = 183
 # Carátulas completas de GameTDB, por orden de preferencia: alta resolución (1024×680) y normal (512×340)
 PRINT_COVER_TYPES = ['coverfullHQ', 'coverfull']
 
+# Marcas de corte: separación respecto a la esquina de la imagen y longitud del trazo
 _MARK_GAP_MM = 2
 _MARK_LENGTH_MM = 5
 
@@ -31,6 +32,7 @@ def is_full_cover(texture):
 
 
 def save_cover(parent, texture, name, log):
+    """Pide dónde guardar la carátula (PNG) y la escribe; el resultado se anota en log."""
     dialog = Gtk.FileDialog(title='Guardar carátula', initial_name=f"{name.replace('/', '-')}.png")
 
     def on_response(dlg, result):
@@ -50,6 +52,7 @@ def save_cover(parent, texture, name, log):
 
 
 def _draw_page(_op, context, _page_nr, surface, log):
+    """Dibuja la carátula centrada en la hoja, a tamaño real (o reducida si no cabe), con sus marcas de corte."""
     cr = context.get_cairo_context()
     page_w, page_h = context.get_width(), context.get_height()  # en mm, hoja completa
     scale = min(1, page_w / INSERT_WIDTH_MM, page_h / INSERT_HEIGHT_MM)

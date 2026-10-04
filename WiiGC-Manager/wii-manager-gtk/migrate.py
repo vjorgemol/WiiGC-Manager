@@ -16,6 +16,7 @@ from pathlib import Path
 
 from backend import core
 
+# Bloque de copia de los archivos de GameCube: entre bloque y bloque se atiende la cancelación
 CHUNK = 16 * 1024 * 1024
 
 
@@ -44,6 +45,7 @@ def volumes(devices):
 
 
 def _tools():
+    """Rutas de (wit, wwt); si no se encuentran, su nombre a secas."""
     return core.which('wit') or 'wit', core.which('wwt') or 'wwt'
 
 
@@ -174,6 +176,10 @@ def _run(cmd, cancel):
 
 
 def _copy_wii(game, dst, cancel):
+    """
+    Copia un juego de Wii al destino: con wit a una unidad montada, con wwt a una
+    partición WBFS. Si falla o se cancela, borra lo copiado a medias.
+    """
     wit, wwt = _tools()
     src = shlex.quote(game['source'])
     if core.is_mounted_dir(dst):
@@ -201,6 +207,10 @@ def _copy_wii(game, dst, cancel):
 
 
 def _copy_gc(game, cancel):
+    """
+    Copia al destino los archivos que le faltan de un juego de GameCube (ver plan()).
+    Si falla o se cancela, borra lo copiado a medias.
+    """
     target = Path(game['target'])
     created = not target.exists()
     target.mkdir(parents=True, exist_ok=True)

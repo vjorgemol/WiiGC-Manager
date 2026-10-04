@@ -14,7 +14,9 @@ from backend import core, run_async
 from widgets.operation_status import OperationStatus
 from widgets.path_row import PathRow
 
+# Texto de la fila de destino mientras no se elige ninguno
 SAME_DIR = 'Mismo directorio y nombre que la imagen de origen'
+# Extensiones que with_image_suffix() sustituye por la del formato de salida
 IMAGE_SUFFIXES = {'.iso', '.wbfs', '.wdf', '.ciso', '.wia', '.gcm'}
 
 
@@ -49,6 +51,8 @@ def convert_batch(src_dir, dst):
 
 
 class ConvertPage(Gtk.Box):
+    """Las tres pestañas comparten una fila de estado: solo se hace una conversión a la vez."""
+
     def __init__(self, get_device_path, log):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         self.set_margin_top(16)
@@ -81,6 +85,7 @@ class ConvertPage(Gtk.Box):
         return True
 
     def _finish(self, text, ok):
+        """Termina la conversión: resultado al terminal y a la fila de estado."""
         self._log.append(text, 'ok' if ok else 'err')
         self._view_stack.set_sensitive(True)
         self._status.finish(text, ok)
@@ -111,6 +116,7 @@ class ConvertPage(Gtk.Box):
         return group
 
     def _convert_iso_to_wfs(self, src, dst, opts):
+        """Convierte la imagen src a WBFS; sin destino, junto a la imagen de origen."""
         if not src:
             self._log.append('✗ Elige la imagen de origen', 'err')
             return
@@ -154,6 +160,7 @@ class ConvertPage(Gtk.Box):
         return group
 
     def _convert_wfs_to_iso(self, src, dst, opts):
+        """Convierte src a ISO (o a WBFS / ISO partida, según opts); sin destino, junto a la imagen de origen."""
         if not src:
             self._log.append('✗ Elige la imagen de origen', 'err')
             return
@@ -186,6 +193,7 @@ class ConvertPage(Gtk.Box):
         return group
 
     def _run_batch(self, src, dst):
+        """Convierte en un hilo todos los ISOs de la carpeta src (ver convert_batch)."""
         if not src:
             self._log.append('✗ Elige el directorio con los ISOs', 'err')
             return
@@ -197,6 +205,7 @@ class ConvertPage(Gtk.Box):
 
     # ── Helpers ──────────────────────────────────────────────────
     def _on_convert_done(self, ok_message):
+        """Devuelve el on_done de una conversión: interpreta { error | rc, stdout, stderr } del backend."""
         def handler(data):
             if data.get('error'):
                 self._finish(f"✗ {data['error']}", False)
@@ -220,6 +229,7 @@ class ConvertPage(Gtk.Box):
         return str(dest)
 
     def _pick_folder(self, entry_row):
+        """Elige una carpeta y la escribe en la fila."""
         dialog = Gtk.FileDialog()
 
         def on_response(dlg, result):

@@ -20,6 +20,7 @@ from pages.verify import VerifyPage
 from pages.settings import SettingsPage
 from widgets.log_view import LogView
 
+# Vistas del panel lateral: (nombre de la página en el Gtk.Stack, icono, texto)
 VIEWS = [
     ('library', 'view-list-symbolic', 'Videoteca'),
     ('format', 'drive-harddisk-symbolic', 'Formatear / Preparar'),
@@ -29,6 +30,7 @@ VIEWS = [
     ('settings', 'preferences-system-symbolic', 'Ajustes'),
 ]
 
+# Filtros de la Videoteca: (nombre que entiende LibraryPage.apply_filter, icono, texto)
 FILTERS = [
     ('all', 'view-list-symbolic', 'Todos los juegos'),
     ('wii', 'applications-games-symbolic', 'Juegos Wii'),
@@ -37,10 +39,17 @@ FILTERS = [
     ('iso', 'media-optical-symbolic', 'Formato ISO / GCM'),
 ]
 
+# Ancho máximo del contenido: en ventanas muy anchas queda centrado en vez de estirarse
 CLAMP_WIDTH = 1100
 
 
 class MainWindow(Adw.ApplicationWindow):
+    """
+    Crea las páginas y las conecta entre sí: todas comparten el terminal de
+    resultados (LogView) y la ruta de la unidad explorada, que vive en el campo
+    del panel lateral (ver _get_device_path).
+    """
+
     def __init__(self, app):
         super().__init__(application=app, title='WiiGC Manager',
                           default_width=1180, default_height=760, width_request=360, height_request=480)
@@ -85,6 +94,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     # ── Panel lateral (sidebar) ─────────────────────────────────────
     def _build_sidebar_page(self):
+        """Panel lateral: lista de vistas, filtros de la Videoteca y, abajo, la ruta de la unidad a explorar."""
         toolbar_view = Adw.ToolbarView()
 
         header = Adw.HeaderBar(show_end_title_buttons=False)
@@ -156,6 +166,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     @staticmethod
     def _section_label(text):
+        """Título de sección del panel lateral."""
         label = Gtk.Label(label=text, xalign=0)
         label.add_css_class('caption-heading')
         label.add_css_class('dim-label')
@@ -164,6 +175,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     @staticmethod
     def _nav_row(icon_name, label, name):
+        """Fila de navegación (icono + texto). name identifica la vista o el filtro al seleccionarla."""
         row = Gtk.ListBoxRow()
         row.set_name(name)
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
@@ -194,6 +206,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._theme_btn.set_icon_name('weather-clear-symbolic' if dark else 'weather-clear-night-symbolic')
 
     def _on_browse_device_path(self, _btn):
+        """Elegir con el explorador de archivos la carpeta o unidad a explorar."""
         dialog = Gtk.FileDialog()
         dialog.select_folder(self, None, self._on_device_path_chosen)
 
@@ -236,6 +249,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._usb_check_id = GLib.timeout_add(1000, self._check_usb_drives)
 
     def _check_usb_drives(self):
+        """Consulta en un hilo las unidades conectadas y aplica la autoselección."""
         self._usb_check_id = 0
         run_async(core.api_devices, {}, on_done=self._autoselect_usb_drive)
         return GLib.SOURCE_REMOVE
@@ -290,24 +304,30 @@ class MainWindow(Adw.ApplicationWindow):
             self._on_scan_device()
 
     def _on_scan_device(self, *_args):
+        """Explora la ruta del panel lateral y carga sus juegos en la Videoteca."""
         self.library_page.load_games(self._get_device_path())
 
     def _get_device_path(self):
+        """Ruta de la unidad explorada: punto de montaje, partición WBFS (/dev/…) o vacío (detección automática)."""
         return self._device_path_entry.get_text().strip()
 
     def _on_cover_prefs_changed(self, settings):
+        """Ajustes → Carátulas: guardar y volver a pedir la carátula que está a la vista."""
         settings_store.save(settings)
         self.library_page.reload_cover()
 
     def _get_cover_prefs(self):
+        """(región, tipo) de carátula elegidos en Ajustes."""
         return self.settings.get('cover_region', 'ES'), self.settings.get('cover_type', 'cover3D')
 
     def _on_settings_saved(self, settings):
+        """Ajustes → Guardar: persistir y llevar la ruta WFS/USB al panel lateral."""
         settings_store.save(settings)
         self._device_path_entry.set_text(settings.get('wfs_path', ''))
 
     # ── Terminal de resultados (compartido por todas las páginas) ──
     def _build_terminal_panel(self):
+        """Panel inferior: cabecera con el botón de limpiar y, debajo, el LogView."""
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         box.add_css_class('background')
 
@@ -330,11 +350,13 @@ class MainWindow(Adw.ApplicationWindow):
         return box
 
     def _on_toggle_terminal(self, settings):
+        """Ajustes → Mostrar terminal: guardar y mostrar u ocultar el panel inferior."""
         settings_store.save(settings)
         self._content_toolbar_view.set_reveal_bottom_bars(bool(settings.get('show_terminal', False)))
 
     # ── Contenido ────────────────────────────────────────────────
     def _build_content_page(self):
+        """Zona de contenido: un Gtk.Stack con las seis páginas y, debajo, el terminal de resultados."""
         toolbar_view = Adw.ToolbarView()
         toolbar_view.add_top_bar(Adw.HeaderBar())
 
@@ -370,10 +392,12 @@ class MainWindow(Adw.ApplicationWindow):
 
     @staticmethod
     def _clamp(widget):
+        """Limita el ancho de una página a CLAMP_WIDTH."""
         return Adw.Clamp(child=widget, maximum_size=CLAMP_WIDTH, tightening_threshold=800,
                           hexpand=True, vexpand=True)
 
     def _select_view(self, name):
+        """Muestra la página name y refresca lo que en ella depende de la unidad explorada."""
         self._stack.set_visible_child_name(name)
         self._filters_box.set_visible(name == 'library')
         self._content_page.set_title(next(label for n, _i, label in VIEWS if n == name))

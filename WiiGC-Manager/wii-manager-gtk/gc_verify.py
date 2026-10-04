@@ -77,5 +77,6 @@ def verify(path, label=''):
 
 
 def _starts_with(path, magic):
+    """True si el archivo empieza por esos bytes (la firma del formato)."""
     with open(path, 'rb') as f:
         return f.read(len(magic)) == magic

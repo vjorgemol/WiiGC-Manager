@@ -22,6 +22,7 @@ import gametdb
 import migrate
 from backend import core, run_async
 
+# Formatos (campo fmt del juego) que entran en el filtro «Formato ISO / GCM»
 ISO_FILTERS = {'iso', 'gcm', 'ciso'}
 
 
@@ -71,6 +72,12 @@ def remove_games(games, part):
 
 
 class LibraryPage(Gtk.Box):
+    """
+    log es el terminal de resultados; get_cover_prefs() devuelve la (región, tipo)
+    de carátula elegidos en Ajustes. Solo se permite una operación de escritura
+    a la vez sobre la unidad (ver _report).
+    """
+
     def __init__(self, log, get_cover_prefs=lambda: ('ES', 'cover3D')):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         self.set_margin_top(16)
@@ -119,6 +126,7 @@ class LibraryPage(Gtk.Box):
 
     @staticmethod
     def _stat_tile(grid, label_text, column, row):
+        """Añade a la rejilla un indicador (título + valor) y devuelve la etiqueta del valor."""
         tile = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         label = Gtk.Label(label=label_text, xalign=0)
         label.add_css_class('caption')
@@ -131,6 +139,7 @@ class LibraryPage(Gtk.Box):
         return value
 
     def _update_stats(self, used_gb=None, free_gb=None):
+        """Recalcula los indicadores a partir de self._all_games y del espacio usado/libre de la unidad."""
         total = len(self._all_games)
         wii = sum(1 for g in self._all_games if g.get('platform') != 'gc')
         gc = total - wii
@@ -249,11 +258,13 @@ class LibraryPage(Gtk.Box):
         self._apply_filters()
 
     def apply_filter(self, name):
+        """Filtro del panel lateral: all, wii, gc, wbfs o iso."""
         self._active_filter = name
         self._apply_filters()
 
     # ── Carga de datos ───────────────────────────────────────────
     def load_games(self, path):
+        """Explora la unidad en un hilo y recarga la tabla. Con path vacío, detección automática."""
         self._current_path = path or ''
         self._log.append(f"Explorando {path or '(detección automática --auto)'}…", 'info')
         run_async(core.api_list, {'part': self._current_path}, on_done=self._on_games_loaded, on_error=self._on_games_error)
@@ -289,6 +300,7 @@ class LibraryPage(Gtk.Box):
 
     # ── Filtro + render ──────────────────────────────────────────
     def _apply_filters(self):
+        """Aplica la búsqueda y el filtro a self._all_games y reconstruye la tabla."""
         q = self._search_text
         f = self._active_filter
 
@@ -346,6 +358,10 @@ class LibraryPage(Gtk.Box):
         return scroller
 
     def _add_column(self, title, text_fn, sort_key=None, expand=False, xalign=0):
+        """
+        Columna de texto ordenable. text_fn(item) da el texto de la celda; sort_key(item),
+        el valor por el que se ordena (por defecto, el propio texto sin distinguir mayúsculas).
+        """
         factory = Gtk.SignalListItemFactory()
         factory.connect('setup', lambda _f, cell: cell.set_child(
             Gtk.Label(xalign=xalign, ellipsize=Pango.EllipsizeMode.END)))
@@ -415,14 +431,17 @@ class LibraryPage(Gtk.Box):
         return self._detail_revealer
 
     def _selected_items(self):
+        """Los GameItem seleccionados en la tabla."""
         bitset = self._selection.get_selection()
         return [self._selection.get_item(bitset.get_nth(i)) for i in range(bitset.get_size())]
 
     def _single_selected(self):
+        """El GameItem seleccionado, o None si no hay exactamente uno."""
         items = self._selected_items()
         return items[0] if len(items) == 1 else None
 
     def _on_selection_changed(self):
+        """Actualiza los botones y el panel de detalle: ficha y carátula con un juego, resumen con varios."""
         items = self._selected_items()
         self._remove_btn.set_sensitive(bool(items) and not self._busy)
         self._copy_btn.set_sensitive(bool(items) and not self._busy)
@@ -449,6 +468,7 @@ class LibraryPage(Gtk.Box):
 
     @staticmethod
     def _title_list(items, limit=10):
+        """Lista con viñetas de los títulos, recortada a limit."""
         lines = [f"• {i.game.get('title', '?')}" for i in items[:limit]]
         if len(items) > limit:
             lines.append(f'… y {len(items) - limit} más')
@@ -462,6 +482,7 @@ class LibraryPage(Gtk.Box):
         return False
 
     def _confirm_remove(self):
+        """Pide confirmación antes de eliminar los juegos seleccionados."""
         items = self._selected_items()
         if not items or self._busy:
             return
@@ -486,6 +507,7 @@ class LibraryPage(Gtk.Box):
                   on_done=self._on_removed, on_error=lambda e: self._on_removed([], error=e))
 
     def _on_removed(self, results, error=None):
+        """Informa del resultado de remove_games() y recarga la Videoteca."""
         failed = 0
         for game, game_error in results:
             name = f"{game.get('title', '?')} [{game.get('id', '?')}]"
@@ -505,6 +527,7 @@ class LibraryPage(Gtk.Box):
 
     # ── Copiar juegos a otra unidad ──────────────────────────────
     def _choose_copy_destination(self):
+        """«Copiar a…»: busca las demás unidades conectadas y pregunta a cuál copiar."""
         items = self._selected_items()
         if not items or self._busy:
             return
@@ -518,6 +541,7 @@ class LibraryPage(Gtk.Box):
                   on_error=lambda e: self._report(f'✗ {e}', 'err'))
 
     def _show_copy_dialog(self, games, summary, data):
+        """Diálogo con el desplegable de unidades de destino (todas menos la explorada)."""
         src = os.path.realpath(self._current_path)
         vols = [v for v in migrate.volumes(data.get('devices', [])) if os.path.realpath(v['path']) != src]
         if not vols:
@@ -542,6 +566,7 @@ class LibraryPage(Gtk.Box):
         dialog.present(self.get_root())
 
     def _start_copy(self, games, dst):
+        """Lanza la copia en un hilo: migrate.migrate() limitado a los juegos seleccionados."""
         self._copy_cancel = threading.Event()
         self._status_cancel.set_sensitive(True)
         self._report(f'Copiando {len(games)} juego(s) a {dst}… Puede tardar, no desconectes las unidades.', 'info')
@@ -570,6 +595,7 @@ class LibraryPage(Gtk.Box):
         self._report(f'✗ {error}', 'err')
 
     def _on_copied(self, dst, copied, failed, cancelled, todo):
+        """Informa del resultado de la copia: copiados, ya presentes, no admitidos y fallidos."""
         self._copy_cancel = None
         for game in copied:
             self._log.append(f"✓ Copiado {game['title']} [{game['id']}]", 'ok')
@@ -590,6 +616,7 @@ class LibraryPage(Gtk.Box):
 
     # ── Carátula (GameTDB, con fallback por región/tipo) ──────────
     def _show_cover(self, game):
+        """Muestra la carátula del juego: la que ya está en memoria o, si no, la pide en un hilo."""
         game_id = game.get('id')
         if game_id in self._covers:
             self._set_cover(self._covers[game_id])

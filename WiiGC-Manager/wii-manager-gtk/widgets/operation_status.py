@@ -12,6 +12,8 @@ from backend import core
 
 
 class OperationStatus(Gtk.Box):
+    """Ver la cabecera del módulo. busy es True entre start() y finish()."""
+
     def __init__(self):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6, visible=False)
         self.busy = False
@@ -60,6 +62,7 @@ class OperationStatus(Gtk.Box):
             self._label.add_css_class(css_class)
 
     def _poll(self):
+        """Cada 300 ms: lleva a la barra el avance que publica el backend."""
         if not self.busy:
             self._timer = 0
             return GLib.SOURCE_REMOVE

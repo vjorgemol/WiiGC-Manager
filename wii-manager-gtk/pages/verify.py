@@ -18,11 +18,18 @@ from backend import core, run_async
 from widgets.operation_status import OperationStatus
 from widgets.path_row import PathRow
 
+# En la salida de «verificar todos», las líneas con un ID de juego son las de
+# resultado; de ellas, las que mencionan un error son las de los juegos dañados
 _GAME_ID_RE = re.compile(r'[A-Z0-9]{4,6}')
 _ERROR_RE = re.compile(r'error|bad|fail', re.IGNORECASE)
+# Última opción del desplegable: verificar un archivo suelto en vez de un juego de la unidad
 _OTHER_FILE = 'Otro archivo (ISO / WBFS / GCM)…'
 _GC_EXTENSIONS = ('.iso', '.gcm', '.ciso')
 
+
+# Las funciones verify_* devuelven (filas, salidas): filas = [(ok, texto)], con
+# ok True/False/None (None: no se ha podido comprobar); salidas = respuestas de
+# core.api_verify, para volcar el comando y su salida en el terminal.
 
 def _wii_rows(data, name):
     """Filas de resultado a partir de la respuesta de core.api_verify."""
@@ -68,6 +75,7 @@ def verify_gc_game(game):
 
 
 def verify_wii_game(game, part):
+    """Verifica un juego de Wii de la unidad explorada (part) por su ID."""
     name = f"{game.get('title', '?')} [{game['id']}]"
     data = core.api_verify({'part': part, 'id': game['id']})
     return _wii_rows(data, name), [data]
@@ -93,6 +101,8 @@ def verify_all(games, part):
 
 
 class VerifyPage(Gtk.Box):
+    """get_games() devuelve los juegos de la última exploración de la Videoteca."""
+
     def __init__(self, get_device_path, log, get_games=lambda: []):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         self.set_margin_top(16)
@@ -150,6 +160,7 @@ class VerifyPage(Gtk.Box):
         self._on_game_selected()
 
     def _selected_game(self):
+        """Juego elegido en el desplegable, o None si es «Otro archivo…»."""
         pos = self._game_row.get_selected()
         return self._games[pos] if pos < len(self._games) else None
 
@@ -157,6 +168,7 @@ class VerifyPage(Gtk.Box):
         self._path_row.set_visible(self._selected_game() is None)
 
     def _verify_one(self):
+        """Verifica el juego elegido o, con «Otro archivo…», la imagen de la fila de ruta."""
         game = self._selected_game()
         if game:
             name = f"{game.get('title', '?')} [{game['id']}]"
@@ -174,6 +186,7 @@ class VerifyPage(Gtk.Box):
         run_async(*task, on_done=self._on_result, on_error=self._on_error)
 
     def _start(self, text):
+        """Bloquea los botones, borra los resultados anteriores y muestra la operación en curso."""
         self._log.append(text, 'info')
         self._btn_row.set_sensitive(False)
         self._render_results([])
@@ -193,6 +206,7 @@ class VerifyPage(Gtk.Box):
         run_async(verify_all, self._get_games(), path, on_done=self._on_result, on_error=self._on_error)
 
     def _on_result(self, result):
+        """Resultado de cualquiera de las verify_*: detalle al terminal y resumen a la página."""
         rows, outputs = result
         for data in outputs:
             self._log_result(data)
@@ -207,6 +221,7 @@ class VerifyPage(Gtk.Box):
         self._render_results(rows)
 
     def _log_result(self, data):
+        """Comando y salida de wit/wwt, al terminal."""
         if data.get('cmd'):
             self._log.append(f"$ {data['cmd']}", 'cmd')
         if data.get('stdout'):
@@ -215,6 +230,7 @@ class VerifyPage(Gtk.Box):
             self._log.append(data['stderr'], 'err')
 
     def _render_results(self, rows):
+        """Una tarjeta por fila de resultado, con su etiqueta OK / ERR / N/D."""
         while child := self._results_box.get_first_child():
             self._results_box.remove(child)
         for ok, text in rows:

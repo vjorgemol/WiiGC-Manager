@@ -68,6 +68,7 @@ def fetch_cover(game_id, is_gc, pref_region, pref_type, timeout=5, fallback_type
 
 
 def _write_cache(cache_file, data):
+    """Guarda en caché la carátula descargada (o un archivo vacío: «GameTDB no la tiene»)."""
     try:
         cache_file.parent.mkdir(parents=True, exist_ok=True)
         cache_file.write_bytes(data)

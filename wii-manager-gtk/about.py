@@ -22,6 +22,7 @@ _METAINFO_PATHS = [
 
 
 def _metainfo():
+    """Raíz del metainfo.xml (el primero que exista); un <component> vacío si no hay ninguno."""
     for path in _METAINFO_PATHS:
         try:
             return ET.parse(path).getroot()
@@ -37,6 +38,7 @@ def version():
 
 
 def present(parent):
+    """Muestra el diálogo «Acerca de» sobre la ventana parent."""
     info = _metainfo()
     urls = {u.get('type'): (u.text or '').strip() for u in info.findall('url')}
     dialog = Adw.AboutDialog(
