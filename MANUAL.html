@@ -101,6 +101,7 @@
     <li><a href="#primeros-pasos">Primeros pasos</a></li>
     <li><a href="#ventana">La ventana</a></li>
     <li><a href="#videoteca">Videoteca</a></li>
+    <li><a href="#homebrew">Homebrew</a></li>
     <li><a href="#formatear">Formatear / Preparar</a></li>
     <li><a href="#convertir">Convertir</a></li>
     <li><a href="#migrar">Migrar</a></li>
@@ -116,7 +117,7 @@
 
 <h1>WiiGC Manager — Manual de uso</h1>
 <p class="lead">WiiGC Manager gestiona la colección de juegos de <strong>Wii</strong> y <strong>GameCube</strong> de una unidad USB o tarjeta SD: los añade, elimina, convierte, verifica y copia a otra unidad, y prepara la unidad para usarla en la consola con WiiFlow, USB Loader GX y Nintendont.</p>
-<p>Este manual describe la aplicación de escritorio (GTK4, versión 1.8.0). La versión web original, que comparte el mismo motor, se resume <a href="#web">al final</a>.</p>
+<p>Este manual describe la aplicación de escritorio (GTK4, versión 1.9.0). La versión web original, que comparte el mismo motor, se resume <a href="#web">al final</a>.</p>
 
 <figure>
   <img src="WiiGC-Manager/flatpak/screenshots/videoteca.png" alt="Ventana de WiiGC Manager en la vista Videoteca">
@@ -170,7 +171,7 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
 
 <h3>Con una unidad nueva</h3>
 <ol>
-  <li>Ve a <strong>Formatear / Preparar</strong>, selecciona la unidad y formatéala como FAT32 con las carpetas creadas (<a href="#formatear">apartado 5</a>).</li>
+  <li>Ve a <strong>Formatear / Preparar</strong>, selecciona la unidad y formatéala como FAT32 con las carpetas creadas (<a href="#formatear">apartado 6</a>).</li>
   <li>En la misma página, instala los cargadores que vayas a usar.</li>
   <li>Vuelve a <strong>Videoteca</strong> y añade juegos con <strong>+ Añadir Wii</strong> y <strong>+ Añadir GameCube</strong>.</li>
 </ol>
@@ -195,14 +196,14 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
 <!-- ═══════════════════════════════════════════════════════════ -->
 <h2 id="ventana">3. La ventana</h2>
 <ul>
-  <li><strong>Panel lateral, arriba</strong>: las seis vistas (Videoteca, Formatear / Preparar, Convertir, Migrar, Verificar, Ajustes). En la Videoteca aparecen además los <strong>Filtros</strong>.</li>
+  <li><strong>Panel lateral, arriba</strong>: las siete vistas (Videoteca, Homebrew, Formatear / Preparar, Convertir, Migrar, Verificar, Ajustes). En la Videoteca aparecen además los <strong>Filtros</strong> y, en Homebrew, las <strong>Categorías</strong>.</li>
   <li><strong>Panel lateral, abajo</strong>: la ruta de la unidad con la que se trabaja y el botón <strong>Explorar dispositivo</strong>. Todas las vistas usan esa unidad.</li>
   <li><strong>Cabecera</strong>: el botón de información abre «Acerca de» (versión y novedades); el del sol o la luna cambia entre tema claro y oscuro.</li>
   <li><strong>Terminal</strong>: un panel inferior opcional con los comandos ejecutados y su salida. Se activa en <strong>Ajustes → Mostrar terminal de resultados</strong>. Es el primer sitio donde mirar cuando algo falla.</li>
 </ul>
 <p>En ventanas estrechas, el panel lateral se pliega y se navega entre él y el contenido.</p>
 <p>La app es de instancia única: si ya está abierta, lanzarla otra vez solo trae su ventana al frente.</p>
-<p>Si cierras la ventana mientras se copia o elimina un juego, la app avisa antes: cerrar interrumpe la operación y el juego queda incompleto.</p>
+<p>Si cierras la ventana mientras se copia o elimina un juego, o mientras se descarga homebrew, la app avisa antes: cerrar interrumpe la operación y el juego queda incompleto.</p>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
 <h2 id="videoteca">4. Videoteca</h2>
@@ -291,7 +292,41 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
 </ul>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
-<h2 id="formatear">5. Formatear / Preparar</h2>
+<h2 id="homebrew">5. Homebrew</h2>
+<p>Muestra el catálogo de la <a href="https://oscwii.org/library">Open Shop Channel</a>, la biblioteca de aplicaciones caseras para Wii, y descarga las que elijas en la unidad explorada. Quedan en la carpeta <code>apps/</code>, de donde las lee el Homebrew Channel de la consola.</p>
+
+<h3>Indicadores</h3>
+<p>Arriba se muestran las apps del catálogo, las que ya están en la unidad, las que tienen una versión más nueva y el espacio disponible.</p>
+
+<h3>Tabla de apps</h3>
+<p>Cada fila muestra nombre, categoría, versión, tamaño que ocupa en la unidad y, en la columna <strong>En la unidad</strong>, si está instalada o se puede actualizar.</p>
+<ul>
+  <li><strong>Ordenar</strong>: clic en la cabecera de una columna.</li>
+  <li><strong>Buscar</strong>: escribe parte del nombre o del autor en el campo de búsqueda.</li>
+  <li><strong>Filtrar</strong>: en el panel lateral, por las mismas categorías que la web: Utilidades, Emuladores, Juegos, Multimedia y Demos.</li>
+  <li><strong>Seleccionar varias</strong>: Ctrl + clic o Mayús + clic. El botón <strong>Seleccionar todo</strong> (o Ctrl + A) marca todas las de la lista, con el filtro y la búsqueda aplicados.</li>
+  <li><strong>Recargar</strong>: el botón de las flechas vuelve a descargar el catálogo, que se guarda en el PC y se renueva solo cada 6 horas.</li>
+</ul>
+
+<h3>Panel de detalle</h3>
+<p>Al seleccionar una app se abre a la derecha su ficha: icono, descripción, autor, categoría, versión, fecha de publicación, tamaño, mandos y consolas compatibles y la carpeta en la que se instala. Con varias seleccionadas muestra el total que ocupan y la lista de nombres.</p>
+<p class="warn">⚠ Algunas apps pueden escribir en la memoria interna de la consola (NAND) y otras están obsoletas: la ficha lo advierte. Úsalas con cuidado.</p>
+
+<h3>Descargar en la unidad</h3>
+<ol>
+  <li>Selecciona una o varias apps.</li>
+  <li>Pulsa <strong>Descargar en la unidad</strong>, o haz doble clic sobre una app, y confirma.</li>
+</ol>
+<ul>
+  <li>Las que ya están en la unidad en su última versión se omiten; las que tienen una versión más nueva se actualizan.</li>
+  <li>Cada descarga se comprueba antes de copiarla. Si una falla, se sigue con las demás y el error queda en el terminal.</li>
+  <li>La fila de estado muestra el avance y un botón <strong>Cancelar</strong>: las apps ya descargadas se quedan en la unidad.</li>
+  <li>Para descargar el catálogo entero hacen falta alrededor de 1,3 GB libres.</li>
+</ul>
+<p>Necesita conexión a internet y una unidad montada (FAT32): no funciona sobre una partición WBFS. Para usar las apps, la consola tiene que tener instalado el Homebrew Channel.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="formatear">6. Formatear / Preparar</h2>
 <p class="warn">⚠ El formateo borra todo el contenido de la unidad o partición elegida.</p>
 
 <h3>Formatear</h3>
@@ -318,7 +353,7 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
 <p>Necesita conexión a internet y una unidad montada (FAT32): no funciona sobre una partición WBFS.</p>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
-<h2 id="convertir">6. Convertir</h2>
+<h2 id="convertir">7. Convertir</h2>
 <figure>
   <img src="WiiGC-Manager/flatpak/screenshots/convertir.png" alt="Vista Convertir con sus tres pestañas">
   <figcaption>Conversión entre ISO y WBFS</figcaption>
@@ -347,7 +382,7 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
 <p>La app nunca sobrescribe un destino sin que lo hayas elegido tú: si el archivo por defecto ya existe, pide otro.</p>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
-<h2 id="migrar">7. Migrar</h2>
+<h2 id="migrar">8. Migrar</h2>
 <p>Copia <strong>todos</strong> los juegos de una unidad a otra; por ejemplo, al pasar a un disco de más capacidad.</p>
 <ol>
   <li>Conecta las dos unidades. Las FAT32 y NTFS tienen que estar montadas.</li>
@@ -360,7 +395,7 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
 <p>Los juegos de GameCube no se pueden migrar a una partición WBFS; el resumen indica cuántos quedan fuera.</p>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
-<h2 id="verificar">8. Verificar</h2>
+<h2 id="verificar">9. Verificar</h2>
 <p>Comprueba que las imágenes no están dañadas.</p>
 <ul>
   <li><strong>Un juego de la unidad</strong>: elígelo en el desplegable y pulsa <strong>Verificar</strong>.</li>
@@ -383,7 +418,7 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
 <p>Verificar lee la imagen entera: cuenta con varios minutos por juego en una unidad USB.</p>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
-<h2 id="ajustes">9. Ajustes</h2>
+<h2 id="ajustes">10. Ajustes</h2>
 <div class="table-wrap"><table>
   <tr><th>Ajuste</th><th>Efecto</th></tr>
   <tr><td><strong>Mostrar terminal de resultados</strong></td><td>Abre el panel inferior con los comandos y su salida. Se aplica al instante.</td></tr>
@@ -397,7 +432,7 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
 <p>Los ajustes se guardan en <code>~/.config/wii-manager-gtk/settings.json</code>.</p>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
-<h2 id="problemas">10. Solución de problemas</h2>
+<h2 id="problemas">11. Solución de problemas</h2>
 <dl class="faq">
   <dt>La app no detecta la unidad</dt>
   <dd>La autodetección solo actúa cuando hay exactamente una unidad USB con una sola partición utilizable. En otro caso, indica la ruta a mano. Una unidad FAT32 o NTFS sin montar no se puede explorar: móntala desde Archivos.</dd>
@@ -429,7 +464,7 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
 </dl>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
-<h2 id="web">11. Versión web</h2>
+<h2 id="web">12. Versión web</h2>
 <p>La versión original funciona en el navegador y gestiona juegos de Wii y GameCube con el mismo motor. No incluye <strong>Migrar</strong> ni <strong>Copiar a…</strong>.</p>
 <pre><code>./launch.sh            # arranca el servidor y abre el navegador
 ./launch.sh --status   # indica si el servidor está en marcha
@@ -439,7 +474,7 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
 <p>La interfaz queda en <code>http://localhost:8765</code> y solo es accesible desde el propio equipo. El archivo <code>README.md</code> describe su API.</p>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
-<h2 id="referencia">12. Referencia</h2>
+<h2 id="referencia">13. Referencia</h2>
 
 <h3>Formatos admitidos</h3>
 <div class="table-wrap"><table>
@@ -458,6 +493,7 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
   <tr><td><code>~/.config/wii-manager-gtk/settings.json</code></td><td>Ajustes</td></tr>
   <tr><td><code>~/.cache/wii-manager-gtk/covers/</code></td><td>Carátulas descargadas</td></tr>
   <tr><td><code>~/.cache/wii-manager-gtk/gametdb.json</code></td><td>Base de datos de GameTDB (se renueva cada 30 días)</td></tr>
+  <tr><td><code>~/.cache/wii-manager-gtk/oscwii/</code></td><td>Catálogo de homebrew de oscwii.org (se renueva cada 6 horas) e iconos de las apps</td></tr>
   <tr><td><code>~/.cache/wii-manager/tmp/</code></td><td>ISO temporales de las conversiones RVZ/GCZ</td></tr>
 </table></div>
 <p>Borrar la carpeta <code>~/.cache/wii-manager-gtk/</code> es seguro: la app vuelve a descargar lo que necesite.</p>
@@ -467,6 +503,8 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
   <tr><th>Acción</th><th>Atajo</th></tr>
   <tr><td>Eliminar los juegos seleccionados</td><td>Supr</td></tr>
   <tr><td>Seleccionar varios juegos</td><td>Ctrl + clic, Mayús + clic</td></tr>
+  <tr><td>Seleccionar todas las apps de Homebrew</td><td>Ctrl + A</td></tr>
+  <tr><td>Descargar la app de Homebrew</td><td>Doble clic o Intro</td></tr>
   <tr><td>Explorar la ruta escrita</td><td>Intro en el campo de ruta</td></tr>
   <tr><td>Guardar o imprimir la carátula</td><td>Doble clic en la carátula</td></tr>
 </table></div>

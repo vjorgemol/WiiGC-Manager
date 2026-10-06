@@ -13,9 +13,11 @@ gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw, Gio, GLib
 
 import about
+import oscwii
 import settings_store
 from backend import core, run_async
 from pages.library import LibraryPage
+from pages.homebrew import HomebrewPage
 from pages.format import FormatPage
 from pages.convert import ConvertPage
 from pages.migrate import MigratePage
@@ -26,6 +28,7 @@ from widgets.log_view import LogView
 # Vistas del panel lateral: (nombre de la página en el Gtk.Stack, icono, texto)
 VIEWS = [
     ('library', 'view-list-symbolic', 'Videoteca'),
+    ('homebrew', 'folder-download-symbolic', 'Homebrew'),
     ('format', 'drive-harddisk-symbolic', 'Formatear / Preparar'),
     ('convert', 'edit-copy-symbolic', 'Convertir'),
     ('migrate', 'drive-multidisk-symbolic', 'Migrar'),
@@ -41,6 +44,18 @@ FILTERS = [
     ('wbfs', 'folder-symbolic', 'Formato WBFS'),
     ('iso', 'media-optical-symbolic', 'Formato ISO / GCM'),
 ]
+
+# Filtros de Homebrew: las categorías por las que filtra oscwii.org/library
+# (nombre que entiende HomebrewPage.apply_filter, icono, texto)
+HOMEBREW_ICONS = {
+    'utilities': 'applications-utilities-symbolic',
+    'emulators': 'computer-symbolic',
+    'games': 'applications-games-symbolic',
+    'media': 'applications-multimedia-symbolic',
+    'demos': 'applications-science-symbolic',
+}
+HOMEBREW_FILTERS = [('all', 'view-list-symbolic', 'Todas las apps')] + [
+    (name, HOMEBREW_ICONS[name], label) for name, label in oscwii.CATEGORIES]
 
 # Ancho máximo del contenido: en ventanas muy anchas queda centrado en vez de estirarse
 CLAMP_WIDTH = 1100
@@ -66,6 +81,7 @@ class MainWindow(Adw.ApplicationWindow):
                                         sound_enabled=bool(self.settings.get('banner_sound', True)),
                                         on_sound_toggled=self._on_sound_toggled,
                                         get_gc_sound=lambda: self.settings.get('gc_sound_path', ''))
+        self.homebrew_page = HomebrewPage(log=self.terminal, get_device_path=self._get_device_path)
         self.format_page = FormatPage(log=self.terminal, on_formatted=self._on_drive_formatted,
                                       get_device_path=self._get_device_path)
         self.convert_page = ConvertPage(get_device_path=self._get_device_path, log=self.terminal)
@@ -105,7 +121,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     # ── Panel lateral (sidebar) ─────────────────────────────────────
     def _build_sidebar_page(self):
-        """Panel lateral: lista de vistas, filtros de la Videoteca y, abajo, la ruta de la unidad a explorar."""
+        """Panel lateral: lista de vistas, filtros de la Videoteca o de Homebrew y, abajo, la ruta de la unidad a explorar."""
         toolbar_view = Adw.ToolbarView()
 
         header = Adw.HeaderBar(show_end_title_buttons=False)
@@ -137,16 +153,14 @@ class MainWindow(Adw.ApplicationWindow):
         body.append(views_list)
         self._views_list = views_list
 
-        self._filters_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
-        self._filters_box.append(self._section_label('Filtros'))
-        filters_list = Gtk.ListBox()
-        filters_list.add_css_class('navigation-sidebar')
-        filters_list.set_selection_mode(Gtk.SelectionMode.SINGLE)
-        for name, icon, label in FILTERS:
-            filters_list.append(self._nav_row(icon, label, name))
-        filters_list.connect('row-selected', self._on_filter_row_selected)
-        self._filters_box.append(filters_list)
-        body.append(self._filters_box)
+        # Cada vista con filtros tiene los suyos; solo se ven los de la vista abierta
+        self._filter_boxes = {
+            'library': self._filters_section('Filtros', FILTERS, lambda name: self.library_page.apply_filter(name)),
+            'homebrew': self._filters_section('Categorías', HOMEBREW_FILTERS,
+                                              lambda name: self.homebrew_page.apply_filter(name)),
+        }
+        for box in self._filter_boxes.values():
+            body.append(box)
 
         body.append(Gtk.Box(vexpand=True))  # empuja lo siguiente al fondo
 
@@ -174,6 +188,19 @@ class MainWindow(Adw.ApplicationWindow):
         toolbar_view.set_content(scroller)
 
         return Adw.NavigationPage(title='WiiGC Manager', child=toolbar_view)
+
+    def _filters_section(self, title, filters, apply_filter):
+        """Sección del panel lateral con una lista de filtros; al elegir uno llama a apply_filter(nombre)."""
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        box.append(self._section_label(title))
+        filters_list = Gtk.ListBox()
+        filters_list.add_css_class('navigation-sidebar')
+        filters_list.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        for name, icon, label in filters:
+            filters_list.append(self._nav_row(icon, label, name))
+        filters_list.connect('row-selected', lambda _list, row: row is not None and apply_filter(row.get_name()))
+        box.append(filters_list)
+        return box
 
     @staticmethod
     def _section_label(text):
@@ -203,10 +230,6 @@ class MainWindow(Adw.ApplicationWindow):
         if row is not None:
             self._select_view(row.get_name())
 
-    def _on_filter_row_selected(self, _listbox, row):
-        if row is not None:
-            self.library_page.apply_filter(row.get_name())
-
     def _on_toggle_theme(self, _btn):
         # get_dark() es el tema efectivo: con el esquema DEFAULT (el inicial) sigue al del SO
         mgr = Adw.StyleManager.get_default()
@@ -232,12 +255,15 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _on_close_request(self, _window):
         # Cerrar la app en mitad de una copia la interrumpe y deja el juego a medias
-        if not (self.library_page.is_busy() or self.migrate_page.is_busy()):
+        if not (self.library_page.is_busy() or self.migrate_page.is_busy() or self.homebrew_page.is_busy()):
             return False
-        dialog = Adw.AlertDialog(
-            heading='Hay una operación en curso',
-            body='Se está copiando o eliminando un juego en la unidad. Si cierras ahora, '
-                 'la operación se interrumpirá y el juego quedará incompleto.')
+        if self.homebrew_page.is_busy():
+            body = ('Se está descargando homebrew en la unidad. Si cierras ahora, '
+                    'la descarga se interrumpirá y la app quedará incompleta.')
+        else:
+            body = ('Se está copiando o eliminando un juego en la unidad. Si cierras ahora, '
+                    'la operación se interrumpirá y el juego quedará incompleto.')
+        dialog = Adw.AlertDialog(heading='Hay una operación en curso', body=body)
         dialog.add_response('wait', 'Seguir esperando')
         dialog.add_response('close', 'Cerrar de todos modos')
         dialog.set_response_appearance('close', Adw.ResponseAppearance.DESTRUCTIVE)
@@ -250,6 +276,7 @@ class MainWindow(Adw.ApplicationWindow):
     def _on_close_response(self, _dialog, response):
         if response == 'close':
             self.migrate_page.abort()
+            self.homebrew_page.abort()
             self.destroy()
 
     def _schedule_usb_check(self, *_args):
@@ -308,6 +335,8 @@ class MainWindow(Adw.ApplicationWindow):
                 self.terminal.append('Unidad USB desconectada.', 'info')
                 self._device_path_entry.set_text('')
                 self.library_page.clear()
+                if self._stack.get_visible_child_name() == 'homebrew':
+                    self.homebrew_page.refresh()
             self._usb_auto_path = ''
         if len(drives) != 1:
             return
@@ -349,6 +378,8 @@ class MainWindow(Adw.ApplicationWindow):
     def _on_scan_device(self, *_args):
         """Explora la ruta del panel lateral y carga sus juegos en la Videoteca."""
         self.library_page.load_games(self._get_device_path())
+        if self._stack.get_visible_child_name() == 'homebrew':
+            self.homebrew_page.refresh()
 
     def _get_device_path(self):
         """Ruta de la unidad explorada: punto de montaje, partición WBFS (/dev/…) o vacío (detección automática)."""
@@ -404,7 +435,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     # ── Contenido ────────────────────────────────────────────────
     def _build_content_page(self):
-        """Zona de contenido: un Gtk.Stack con las seis páginas y, debajo, el terminal de resultados."""
+        """Zona de contenido: un Gtk.Stack con las siete páginas y, debajo, el terminal de resultados."""
         toolbar_view = Adw.ToolbarView()
         toolbar_view.add_top_bar(Adw.HeaderBar())
 
@@ -412,11 +443,12 @@ class MainWindow(Adw.ApplicationWindow):
         stack.set_hexpand(True)
         stack.set_vexpand(True)
         # Por defecto Gtk.Stack es homogéneo: su tamaño MÍNIMO es el máximo
-        # de TODAS las páginas combinadas, no solo la visible. Con 6 vistas
+        # de TODAS las páginas combinadas, no solo la visible. Con 7 vistas
         # apiladas eso vuelve la ventana casi imposible de encoger.
         stack.set_hhomogeneous(False)
         stack.set_vhomogeneous(False)
         stack.add_named(self._clamp(self.library_page), 'library')
+        stack.add_named(self._clamp(self.homebrew_page), 'homebrew')
         # Formatear tiene muchas secciones: con scroll para no forzar una ventana muy alta
         format_scroller = Gtk.ScrolledWindow(child=self.format_page, hscrollbar_policy=Gtk.PolicyType.NEVER)
         stack.add_named(self._clamp(format_scroller), 'format')
@@ -447,8 +479,11 @@ class MainWindow(Adw.ApplicationWindow):
     def _select_view(self, name):
         """Muestra la página name y refresca lo que en ella depende de la unidad explorada."""
         self._stack.set_visible_child_name(name)
-        self._filters_box.set_visible(name == 'library')
+        for view, box in self._filter_boxes.items():
+            box.set_visible(view == name)
         self._content_page.set_title(next(label for n, _i, label in VIEWS if n == name))
+        if name == 'homebrew':
+            self.homebrew_page.refresh()
         if name == 'verify':
             self.verify_page.refresh_games()
         if name == 'migrate':

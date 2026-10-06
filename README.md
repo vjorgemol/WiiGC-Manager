@@ -39,6 +39,7 @@ Lo que solo hace la versión de escritorio:
 - 🔊 **Sonido del banner** del juego seleccionado, como en el menú de la consola
 - 🐬 **Jugar en Dolphin** con doble clic, si el emulador está instalado
 - 🖨️ **Guardar e imprimir** la carátula completa a tamaño de funda de DVD
+- 🧩 **Descargar homebrew** del catálogo de la [Open Shop Channel](https://oscwii.org/library) en la unidad, con filtros por categoría
 
 ## Requisitos comunes
 
@@ -72,7 +73,7 @@ cd WiiGC-Manager
 
 App nativa para GNOME y otros escritorios, sin servidor ni navegador de por medio.
 
-📖 **[Manual de uso](MANUAL.html)**: instalación, Videoteca, formateo, conversión, migración, verificación y solución de problemas.
+📖 **[Manual de uso](MANUAL.html)**: instalación, Videoteca, homebrew, formateo, conversión, migración, verificación y solución de problemas.
 
 ![Conversión entre ISO y WBFS](WiiGC-Manager/flatpak/screenshots/convertir.png)
 
@@ -84,7 +85,7 @@ App nativa para GNOME y otros escritorios, sin servidor ni navegador de por medi
 | Python 3.8 o posterior, con PyGObject | Ejecutar la app | Sí |
 | `wit` y `wwt` | Leer, copiar, convertir y verificar juegos de Wii | Sí |
 | Dolphin | Añadir imágenes RVZ o GCZ y jugar con doble clic | Solo para eso |
-| Conexión a internet | Carátulas, datos de los juegos y descarga de cargadores | No |
+| Conexión a internet | Carátulas, datos de los juegos y descarga de cargadores y homebrew | No |
 
 En Fedora, la parte gráfica se instala con:
 

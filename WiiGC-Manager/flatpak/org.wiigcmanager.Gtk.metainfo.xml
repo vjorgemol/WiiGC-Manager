@@ -13,7 +13,8 @@
   <launchable type="desktop-id">org.wiigcmanager.Gtk.desktop</launchable>
   <description>
     <p>Videoteca de juegos de Wii y GameCube para unidades USB/SD: añadir, eliminar, convertir,
-    verificar y migrar juegos a otra unidad, preparar la unidad para WiiFlow/Nintendont y descargar carátulas de GameTDB.</p>
+    verificar y migrar juegos a otra unidad, preparar la unidad para WiiFlow/Nintendont, descargar carátulas de GameTDB
+    y descargar homebrew de la Open Shop Channel.</p>
     <p>Necesita wit y wwt (Wiimms ISO Tools) instalados en el sistema; para imágenes RVZ/GCZ, también Dolphin.</p>
   </description>
   <screenshots>
@@ -27,6 +28,13 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.9.0" date="2026-10-06">
+      <description>
+        <ul>
+          <li>Nueva vista «Homebrew»: el catálogo de la Open Shop Channel (oscwii.org) con búsqueda, filtros por categoría (utilidades, emuladores, juegos, multimedia y demos) y ficha de cada app, para descargar las seleccionadas en la unidad explorada. Indica cuáles están ya instaladas y cuáles tienen una versión más nueva.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8.0" date="2026-10-06">
       <description>
         <ul>
