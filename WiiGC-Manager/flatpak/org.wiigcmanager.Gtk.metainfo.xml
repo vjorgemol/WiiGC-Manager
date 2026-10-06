@@ -28,6 +28,14 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.10.0" date="2026-10-06">
+      <description>
+        <ul>
+          <li>Homebrew: nuevo filtro «Instalado en la unidad», que muestra todo el homebrew de la carpeta apps/ (también el que no está en el catálogo, como los cargadores) y permite eliminarlo con el botón «Eliminar» o la tecla Supr.</li>
+          <li>Homebrew: los cargadores que instala «Formatear / Preparar» ya no se ofrecen como actualizables desde el catálogo.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.9.0" date="2026-10-06">
       <description>
         <ul>

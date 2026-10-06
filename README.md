@@ -40,6 +40,7 @@ Lo que solo hace la versión de escritorio:
 - 🐬 **Jugar en Dolphin** con doble clic, si el emulador está instalado
 - 🖨️ **Guardar e imprimir** la carátula completa a tamaño de funda de DVD
 - 🧩 **Descargar homebrew** del catálogo de la [Open Shop Channel](https://oscwii.org/library) en la unidad, con filtros por categoría
+- 🗑️ **Ver y eliminar** el homebrew instalado en la unidad
 
 ## Requisitos comunes
 

@@ -45,8 +45,8 @@ FILTERS = [
     ('iso', 'media-optical-symbolic', 'Formato ISO / GCM'),
 ]
 
-# Filtros de Homebrew: las categorías por las que filtra oscwii.org/library
-# (nombre que entiende HomebrewPage.apply_filter, icono, texto)
+# Filtros de Homebrew: las categorías por las que filtra oscwii.org/library y,
+# al final, lo que ya hay en la unidad (nombre que entiende HomebrewPage.apply_filter, icono, texto)
 HOMEBREW_ICONS = {
     'utilities': 'applications-utilities-symbolic',
     'emulators': 'computer-symbolic',
@@ -55,7 +55,8 @@ HOMEBREW_ICONS = {
     'demos': 'applications-science-symbolic',
 }
 HOMEBREW_FILTERS = [('all', 'view-list-symbolic', 'Todas las apps')] + [
-    (name, HOMEBREW_ICONS[name], label) for name, label in oscwii.CATEGORIES]
+    (name, HOMEBREW_ICONS[name], label) for name, label in oscwii.CATEGORIES] + [
+    ('installed', 'media-flash-symbolic', 'Instalado en la unidad')]
 
 # Ancho máximo del contenido: en ventanas muy anchas queda centrado en vez de estirarse
 CLAMP_WIDTH = 1100
@@ -156,7 +157,7 @@ class MainWindow(Adw.ApplicationWindow):
         # Cada vista con filtros tiene los suyos; solo se ven los de la vista abierta
         self._filter_boxes = {
             'library': self._filters_section('Filtros', FILTERS, lambda name: self.library_page.apply_filter(name)),
-            'homebrew': self._filters_section('Categorías', HOMEBREW_FILTERS,
+            'homebrew': self._filters_section('Filtros', HOMEBREW_FILTERS,
                                               lambda name: self.homebrew_page.apply_filter(name)),
         }
         for box in self._filter_boxes.values():
@@ -258,8 +259,8 @@ class MainWindow(Adw.ApplicationWindow):
         if not (self.library_page.is_busy() or self.migrate_page.is_busy() or self.homebrew_page.is_busy()):
             return False
         if self.homebrew_page.is_busy():
-            body = ('Se está descargando homebrew en la unidad. Si cierras ahora, '
-                    'la descarga se interrumpirá y la app quedará incompleta.')
+            body = ('Se está descargando o eliminando homebrew en la unidad. Si cierras ahora, '
+                    'la operación se interrumpirá y la app quedará incompleta.')
         else:
             body = ('Se está copiando o eliminando un juego en la unidad. Si cierras ahora, '
                     'la operación se interrumpirá y el juego quedará incompleto.')
@@ -335,8 +336,7 @@ class MainWindow(Adw.ApplicationWindow):
                 self.terminal.append('Unidad USB desconectada.', 'info')
                 self._device_path_entry.set_text('')
                 self.library_page.clear()
-                if self._stack.get_visible_child_name() == 'homebrew':
-                    self.homebrew_page.refresh()
+                self._refresh_homebrew()
             self._usb_auto_path = ''
         if len(drives) != 1:
             return
@@ -378,6 +378,10 @@ class MainWindow(Adw.ApplicationWindow):
     def _on_scan_device(self, *_args):
         """Explora la ruta del panel lateral y carga sus juegos en la Videoteca."""
         self.library_page.load_games(self._get_device_path())
+        self._refresh_homebrew()
+
+    def _refresh_homebrew(self):
+        """Si la página Homebrew está a la vista, que vuelva a mirar la unidad explorada."""
         if self._stack.get_visible_child_name() == 'homebrew':
             self.homebrew_page.refresh()
 
@@ -482,8 +486,7 @@ class MainWindow(Adw.ApplicationWindow):
         for view, box in self._filter_boxes.items():
             box.set_visible(view == name)
         self._content_page.set_title(next(label for n, _i, label in VIEWS if n == name))
-        if name == 'homebrew':
-            self.homebrew_page.refresh()
+        self._refresh_homebrew()
         if name == 'verify':
             self.verify_page.refresh_games()
         if name == 'migrate':

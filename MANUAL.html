@@ -117,7 +117,7 @@
 
 <h1>WiiGC Manager — Manual de uso</h1>
 <p class="lead">WiiGC Manager gestiona la colección de juegos de <strong>Wii</strong> y <strong>GameCube</strong> de una unidad USB o tarjeta SD: los añade, elimina, convierte, verifica y copia a otra unidad, y prepara la unidad para usarla en la consola con WiiFlow, USB Loader GX y Nintendont.</p>
-<p>Este manual describe la aplicación de escritorio (GTK4, versión 1.9.0). La versión web original, que comparte el mismo motor, se resume <a href="#web">al final</a>.</p>
+<p>Este manual describe la aplicación de escritorio (GTK4, versión 1.10.0). La versión web original, que comparte el mismo motor, se resume <a href="#web">al final</a>.</p>
 
 <figure>
   <img src="WiiGC-Manager/flatpak/screenshots/videoteca.png" alt="Ventana de WiiGC Manager en la vista Videoteca">
@@ -196,14 +196,14 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
 <!-- ═══════════════════════════════════════════════════════════ -->
 <h2 id="ventana">3. La ventana</h2>
 <ul>
-  <li><strong>Panel lateral, arriba</strong>: las siete vistas (Videoteca, Homebrew, Formatear / Preparar, Convertir, Migrar, Verificar, Ajustes). En la Videoteca aparecen además los <strong>Filtros</strong> y, en Homebrew, las <strong>Categorías</strong>.</li>
+  <li><strong>Panel lateral, arriba</strong>: las siete vistas (Videoteca, Homebrew, Formatear / Preparar, Convertir, Migrar, Verificar, Ajustes). En la Videoteca aparecen además los <strong>Filtros</strong> y, en Homebrew, los de sus categorías y el de lo instalado en la unidad.</li>
   <li><strong>Panel lateral, abajo</strong>: la ruta de la unidad con la que se trabaja y el botón <strong>Explorar dispositivo</strong>. Todas las vistas usan esa unidad.</li>
   <li><strong>Cabecera</strong>: el botón de información abre «Acerca de» (versión y novedades); el del sol o la luna cambia entre tema claro y oscuro.</li>
   <li><strong>Terminal</strong>: un panel inferior opcional con los comandos ejecutados y su salida. Se activa en <strong>Ajustes → Mostrar terminal de resultados</strong>. Es el primer sitio donde mirar cuando algo falla.</li>
 </ul>
 <p>En ventanas estrechas, el panel lateral se pliega y se navega entre él y el contenido.</p>
 <p>La app es de instancia única: si ya está abierta, lanzarla otra vez solo trae su ventana al frente.</p>
-<p>Si cierras la ventana mientras se copia o elimina un juego, o mientras se descarga homebrew, la app avisa antes: cerrar interrumpe la operación y el juego queda incompleto.</p>
+<p>Si cierras la ventana mientras se copia o elimina un juego, o mientras se descarga o elimina homebrew, la app avisa antes: cerrar interrumpe la operación y el juego queda incompleto.</p>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
 <h2 id="videoteca">4. Videoteca</h2>
@@ -293,7 +293,7 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
 <h2 id="homebrew">5. Homebrew</h2>
-<p>Muestra el catálogo de la <a href="https://oscwii.org/library">Open Shop Channel</a>, la biblioteca de aplicaciones caseras para Wii, y descarga las que elijas en la unidad explorada. Quedan en la carpeta <code>apps/</code>, de donde las lee el Homebrew Channel de la consola.</p>
+<p>Muestra el catálogo de la <a href="https://oscwii.org/library">Open Shop Channel</a>, la biblioteca de aplicaciones caseras para Wii, y descarga las que elijas en la unidad explorada. Quedan en la carpeta <code>apps/</code>, de donde las lee el Homebrew Channel de la consola. También muestra el homebrew que ya hay en la unidad y permite eliminarlo.</p>
 
 <h3>Indicadores</h3>
 <p>Arriba se muestran las apps del catálogo, las que ya están en la unidad, las que tienen una versión más nueva y el espacio disponible.</p>
@@ -303,7 +303,7 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
 <ul>
   <li><strong>Ordenar</strong>: clic en la cabecera de una columna.</li>
   <li><strong>Buscar</strong>: escribe parte del nombre o del autor en el campo de búsqueda.</li>
-  <li><strong>Filtrar</strong>: en el panel lateral, por las mismas categorías que la web: Utilidades, Emuladores, Juegos, Multimedia y Demos.</li>
+  <li><strong>Filtrar</strong>: en el panel lateral, por las mismas categorías que la web (Utilidades, Emuladores, Juegos, Multimedia y Demos) o por <strong>Instalado en la unidad</strong>.</li>
   <li><strong>Seleccionar varias</strong>: Ctrl + clic o Mayús + clic. El botón <strong>Seleccionar todo</strong> (o Ctrl + A) marca todas las de la lista, con el filtro y la búsqueda aplicados.</li>
   <li><strong>Recargar</strong>: el botón de las flechas vuelve a descargar el catálogo, que se guarda en el PC y se renueva solo cada 6 horas.</li>
 </ul>
@@ -324,6 +324,20 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
   <li>Para descargar el catálogo entero hacen falta alrededor de 1,3 GB libres.</li>
 </ul>
 <p>Necesita conexión a internet y una unidad montada (FAT32): no funciona sobre una partición WBFS. Para usar las apps, la consola tiene que tener instalado el Homebrew Channel.</p>
+
+<h3>Homebrew instalado</h3>
+<p>El filtro <strong>Instalado en la unidad</strong> muestra todo el homebrew de la carpeta <code>apps/</code> de la unidad explorada: lo descargado desde esta vista y también lo que no está en el catálogo, como una app copiada a mano. Funciona sin conexión.</p>
+<p>La columna <strong>En la unidad</strong> indica el estado de cada app:</p>
+<ul>
+  <li><strong>Instalada</strong>: tiene la versión del catálogo.</li>
+  <li><strong>Actualizable</strong>: el catálogo tiene otra versión; descárgala para actualizarla.</li>
+  <li><strong>Instalada (cargador)</strong>: Nintendont, WiiFlow Lite o USB Loader GX. Se actualizan desde <a href="#formatear">Formatear / Preparar</a>, no desde el catálogo, que puede tener una versión más antigua.</li>
+  <li><strong>Instalada (no está en el catálogo)</strong>: solo se puede eliminar.</li>
+</ul>
+
+<h3>Eliminar homebrew</h3>
+<p>Selecciona una o varias apps instaladas, con cualquier filtro, y pulsa <strong>Eliminar</strong> o la tecla Supr. La app pide confirmación e indica el espacio que se libera.</p>
+<p>Se borra la carpeta de la app dentro de <code>apps/</code>. Las partidas, las ROM y los ajustes que la app guarde en otras carpetas de la unidad se conservan.</p>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
 <h2 id="formatear">6. Formatear / Preparar</h2>
@@ -501,7 +515,7 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
 <h3>Atajos</h3>
 <div class="table-wrap"><table>
   <tr><th>Acción</th><th>Atajo</th></tr>
-  <tr><td>Eliminar los juegos seleccionados</td><td>Supr</td></tr>
+  <tr><td>Eliminar los juegos o el homebrew seleccionados</td><td>Supr</td></tr>
   <tr><td>Seleccionar varios juegos</td><td>Ctrl + clic, Mayús + clic</td></tr>
   <tr><td>Seleccionar todas las apps de Homebrew</td><td>Ctrl + A</td></tr>
   <tr><td>Descargar la app de Homebrew</td><td>Doble clic o Intro</td></tr>

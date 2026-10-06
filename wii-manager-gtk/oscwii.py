@@ -9,13 +9,12 @@ fuera de apps/): instalarla es descomprimirlo allí.
 
 El catálogo y los iconos se guardan en ~/.cache/wii-manager-gtk/oscwii/.
 
-load(), fetch_icon(), scan() e install() son bloqueantes: llamar vía
+load(), fetch_icon() e install() son bloqueantes: llamar vía
 backend.run_async.
 """
 import hashlib
 import io
 import json
-import re
 import shlex
 import shutil
 import time
@@ -117,30 +116,6 @@ def fetch_icon(app, timeout=10):
     except OSError:
         pass
     return data
-
-
-def scan(base_path, apps):
-    """
-    Qué apps del catálogo están ya en la unidad y cuánto espacio le queda:
-    ({slug: versión instalada}, bytes libres). La versión es la del meta.xml
-    de la app ('' si no se puede leer), que es la misma que publica el catálogo.
-    """
-    apps_dir = Path(base_path) / 'apps'
-    installed = {}
-    for app in apps:
-        app_dir = apps_dir / app['slug']
-        if not any((app_dir / binary).is_file() for binary in ('boot.dol', 'boot.elf')):
-            continue
-        version = ''
-        try:
-            # Con expresión regular: muchos meta.xml no son XML bien formado
-            meta = (app_dir / 'meta.xml').read_text(encoding='utf-8', errors='replace')
-            match = re.search(r'<version>(.*?)</version>', meta, re.DOTALL)
-            version = match.group(1).strip() if match else ''
-        except OSError:
-            pass
-        installed[app['slug']] = version
-    return installed, shutil.disk_usage(base_path).free
 
 
 def install(apps, base_path, cancel):
