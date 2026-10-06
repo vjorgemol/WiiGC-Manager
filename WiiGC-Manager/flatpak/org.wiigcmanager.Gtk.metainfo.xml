@@ -28,6 +28,14 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.10.1" date="2026-10-06">
+      <description>
+        <ul>
+          <li>Homebrew: con toda la lista seleccionada, el botón «Seleccionar todo» pasa a ser «Deseleccionar todo» y quita la selección.</li>
+          <li>El PDF de documentación es ahora el manual de uso actual, en lugar de la guía de la antigua versión web.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.10.0" date="2026-10-06">
       <description>
         <ul>

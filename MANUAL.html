@@ -81,11 +81,12 @@
     nav { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--border); padding: 20px 16px; }
     main { padding: 24px 16px 60px; }
   }
+  @page { size: A4; margin: 18mm 16mm; }
   @media print {
     nav { display: none; }
     .layout { display: block; }
     main { padding: 0; }
-    h2 { break-after: avoid; }
+    h2, h3 { break-after: avoid; }
     figure, table, pre { break-inside: avoid; }
   }
 </style>
@@ -95,7 +96,7 @@
 
 <nav>
   <div class="brand">WiiGC Manager</div>
-  <div class="version">Manual de uso · versión 1.8.0</div>
+  <div class="version">Manual de uso · versión 1.10.1</div>
   <ol>
     <li><a href="#instalacion">Requisitos e instalación</a></li>
     <li><a href="#primeros-pasos">Primeros pasos</a></li>
@@ -117,7 +118,7 @@
 
 <h1>WiiGC Manager — Manual de uso</h1>
 <p class="lead">WiiGC Manager gestiona la colección de juegos de <strong>Wii</strong> y <strong>GameCube</strong> de una unidad USB o tarjeta SD: los añade, elimina, convierte, verifica y copia a otra unidad, y prepara la unidad para usarla en la consola con WiiFlow, USB Loader GX y Nintendont.</p>
-<p>Este manual describe la aplicación de escritorio (GTK4, versión 1.10.0). La versión web original, que comparte el mismo motor, se resume <a href="#web">al final</a>.</p>
+<p>Este manual describe la aplicación de escritorio (GTK4, versión 1.10.1). La versión web original, que comparte el mismo motor, se resume <a href="#web">al final</a>.</p>
 
 <figure>
   <img src="WiiGC-Manager/flatpak/screenshots/videoteca.png" alt="Ventana de WiiGC Manager en la vista Videoteca">
@@ -304,7 +305,7 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
   <li><strong>Ordenar</strong>: clic en la cabecera de una columna.</li>
   <li><strong>Buscar</strong>: escribe parte del nombre o del autor en el campo de búsqueda.</li>
   <li><strong>Filtrar</strong>: en el panel lateral, por las mismas categorías que la web (Utilidades, Emuladores, Juegos, Multimedia y Demos) o por <strong>Instalado en la unidad</strong>.</li>
-  <li><strong>Seleccionar varias</strong>: Ctrl + clic o Mayús + clic. El botón <strong>Seleccionar todo</strong> (o Ctrl + A) marca todas las de la lista, con el filtro y la búsqueda aplicados.</li>
+  <li><strong>Seleccionar varias</strong>: Ctrl + clic o Mayús + clic. El botón <strong>Seleccionar todo</strong> (o Ctrl + A) marca todas las de la lista, con el filtro y la búsqueda aplicados. Con todas marcadas, el botón pasa a ser <strong>Deseleccionar todo</strong> y quita la selección.</li>
   <li><strong>Recargar</strong>: el botón de las flechas vuelve a descargar el catálogo, que se guarda en el PC y se renueva solo cada 6 horas.</li>
 </ul>
 

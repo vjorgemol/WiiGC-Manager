@@ -196,10 +196,10 @@ class HomebrewPage(Gtk.Box):
         self._reload_btn.connect('clicked', lambda *_: self._load_catalog(force=True))
         box.append(self._reload_btn)
 
-        select_all_btn = Gtk.Button(label='Seleccionar todo',
-                                    tooltip_text='Seleccionar todas las apps de la lista (Ctrl + A)')
-        select_all_btn.connect('clicked', lambda *_: self._selection.select_all())
-        box.append(select_all_btn)
+        # Con toda la lista seleccionada pasa a ser «Deseleccionar todo» (ver _update_buttons)
+        self._select_all_btn = Gtk.Button(label='Seleccionar todo', sensitive=False)
+        self._select_all_btn.connect('clicked', self._on_select_all_clicked)
+        box.append(self._select_all_btn)
 
         self._install_btn = Gtk.Button(label='Descargar en la unidad', css_classes=['suggested-action'],
                                        sensitive=False,
@@ -270,8 +270,24 @@ class HomebrewPage(Gtk.Box):
                 self._status_label.set_label(progress['step'])
         return GLib.SOURCE_CONTINUE
 
+    def _all_selected(self):
+        """True si están seleccionadas todas las apps de la lista (y hay alguna)."""
+        total = self._selection.get_n_items()
+        return total > 0 and self._selection.get_selection().get_size() == total
+
+    def _on_select_all_clicked(self, _btn):
+        if self._all_selected():
+            self._selection.unselect_all()
+        else:
+            self._selection.select_all()
+
     def _update_buttons(self):
         items = self._selected_items()
+        all_selected = self._all_selected()
+        self._select_all_btn.set_label('Deseleccionar todo' if all_selected else 'Seleccionar todo')
+        self._select_all_btn.set_tooltip_text('Quitar la selección' if all_selected
+                                              else 'Seleccionar todas las apps de la lista (Ctrl + A)')
+        self._select_all_btn.set_sensitive(self._selection.get_n_items() > 0)
         self._install_btn.set_sensitive(any(i.app for i in items) and not self._busy)
         self._remove_btn.set_sensitive(any(i.local for i in items) and not self._busy)
         self._reload_btn.set_sensitive(not self._busy and not self._loading)
