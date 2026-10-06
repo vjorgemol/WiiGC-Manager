@@ -95,7 +95,7 @@
 
 <nav>
   <div class="brand">WiiGC Manager</div>
-  <div class="version">Manual de uso · versión 1.7.2</div>
+  <div class="version">Manual de uso · versión 1.8.0</div>
   <ol>
     <li><a href="#instalacion">Requisitos e instalación</a></li>
     <li><a href="#primeros-pasos">Primeros pasos</a></li>
@@ -116,7 +116,7 @@
 
 <h1>WiiGC Manager — Manual de uso</h1>
 <p class="lead">WiiGC Manager gestiona la colección de juegos de <strong>Wii</strong> y <strong>GameCube</strong> de una unidad USB o tarjeta SD: los añade, elimina, convierte, verifica y copia a otra unidad, y prepara la unidad para usarla en la consola con WiiFlow, USB Loader GX y Nintendont.</p>
-<p>Este manual describe la aplicación de escritorio (GTK4, versión 1.7.2). La versión web original, que comparte el mismo motor, se resume <a href="#web">al final</a>.</p>
+<p>Este manual describe la aplicación de escritorio (GTK4, versión 1.8.0). La versión web original, que comparte el mismo motor, se resume <a href="#web">al final</a>.</p>
 
 <figure>
   <img src="WiiGC-Manager/flatpak/screenshots/videoteca.png" alt="Ventana de WiiGC Manager en la vista Videoteca">
@@ -141,8 +141,8 @@
 <p><code>wit</code> y <code>wwt</code> se descargan de <a href="https://wit.wiimm.de/download.html">wit.wiimm.de/download.html</a> y deben quedar en el <code>PATH</code> (por ejemplo, en <code>/usr/local/bin</code>). Dolphin puede ser el del sistema o el Flatpak <code>org.DolphinEmu.dolphin-emu</code>.</p>
 
 <h3>Ejecutar desde el código fuente</h3>
-<pre><code>git clone https://github.com/vjorgemol/wii-manager.git
-cd wii-manager
+<pre><code>git clone https://github.com/vjorgemol/WiiGC-Manager.git
+cd WiiGC-Manager
 ./run-gtk.sh</code></pre>
 
 <h3>Instalar como Flatpak</h3>
@@ -150,6 +150,13 @@ cd wii-manager
 ./build.sh
 flatpak install --user WiiGC-Manager.flatpak</code></pre>
 <p>Después aparece como <strong>WiiGC Manager</strong> en el menú de aplicaciones. El Flatpak usa el <code>wit</code>, el <code>wwt</code> y el Dolphin instalados en el sistema: no los incluye.</p>
+
+<h3>Ejecutar como AppImage</h3>
+<p>Un único archivo ejecutable, sin instalación, para <strong>Ubuntu 24.04 o posterior</strong> y <strong>Fedora 40 o posterior</strong> (x86_64). Lleva dentro Python, GTK4, libadwaita y GStreamer, así que no hay que instalar ninguna de esas dependencias.</p>
+<pre><code>cd WiiGC-Manager/appimage
+./build.sh
+./WiiGC-Manager-x86_64.AppImage</code></pre>
+<p><code>build.sh</code> necesita podman o docker, y conexión a internet. Igual que el Flatpak, la AppImage usa el <code>wit</code>, el <code>wwt</code> y el Dolphin instalados en el sistema: no los incluye.</p>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
 <h2 id="primeros-pasos">2. Primeros pasos</h2>

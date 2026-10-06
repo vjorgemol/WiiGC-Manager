@@ -1,0 +1,22 @@
+#!/bin/sh
+# Punto de entrada de la AppImage: arranca la app con el Python y las
+# bibliotecas (GTK4, libadwaita, GStreamer…) que van dentro del paquete.
+#
+# Aquí solo se fija LD_LIBRARY_PATH, que tiene que estar antes de que arranque
+# el proceso; el resto del entorno lo prepara usr/lib/python3.*/sitecustomize.py,
+# que además lo deja limpio para wit, wwt, pkexec, Dolphin…
+#
+#   WiiGC-Manager-x86_64.AppImage --python …   → el intérprete del paquete (diagnóstico)
+
+APPDIR="${APPDIR:-$(dirname "$(readlink -f "$0")")}"
+export APPDIR
+
+export WIIGC_ORIG_LD_LIBRARY_PATH="${LD_LIBRARY_PATH:-}"
+export LD_LIBRARY_PATH="$APPDIR/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
+# -I: sin variables PYTHON* ni paquetes de ~/.local, que son de otro Python
+if [ "${1:-}" = --python ]; then
+    shift
+    exec "$APPDIR/usr/bin/python3" -I "$@"
+fi
+exec "$APPDIR/usr/bin/python3" -I "$APPDIR/usr/share/wiigc-manager/wii-manager-gtk/main.py" "$@"

@@ -13,7 +13,7 @@ El proyecto tiene dos interfaces sobre el mismo motor (`wii-manager-server.py`).
 | | [Versión de escritorio (GTK4)](#versión-de-escritorio-gtk4) | [Versión web](#versión-web) |
 |---|---|---|
 | **Qué es** | App nativa GTK4/libadwaita | Servidor local + interfaz en el navegador |
-| **Cómo se lanza** | `./run-gtk.sh` o como Flatpak | `./launch.sh` |
+| **Cómo se lanza** | `./run-gtk.sh`, como Flatpak o como AppImage | `./launch.sh` |
 | **Necesita** | Python 3.8+, PyGObject, GTK 4, libadwaita | Python 3.6+ y un navegador |
 | **Estado** | Desarrollo activo; la más completa | Versión original |
 | **Código** | `wii-manager-gtk/` | `wii-manager.html` |
@@ -62,8 +62,8 @@ sudo usermod -aG disk $USER
 Descarga del proyecto, válida para las dos versiones:
 
 ```bash
-git clone https://github.com/vjorgemol/wii-manager.git
-cd wii-manager
+git clone https://github.com/vjorgemol/WiiGC-Manager.git
+cd WiiGC-Manager
 ```
 
 ---
@@ -107,6 +107,18 @@ flatpak install --user WiiGC-Manager.flatpak
 ```
 
 Después aparece como **WiiGC Manager** en el menú de aplicaciones. El Flatpak usa el `wit`, el `wwt` y el Dolphin instalados en el sistema: no los incluye.
+
+### Ejecutar como AppImage
+
+Un único archivo ejecutable, sin instalación, para **Ubuntu 24.04 o posterior** y **Fedora 40 o posterior** (x86_64). Lleva dentro Python, GTK4, libadwaita y GStreamer, así que no hay que instalar ninguna de esas dependencias.
+
+```bash
+cd WiiGC-Manager/appimage
+./build.sh                              # necesita podman o docker, y conexión a internet
+./WiiGC-Manager-x86_64.AppImage
+```
+
+Igual que el Flatpak, usa el `wit`, el `wwt` y el Dolphin instalados en el sistema: no los incluye.
 
 La versión instalada y las novedades de cada versión se consultan en el diálogo **Acerca de** de la app.
 
@@ -186,13 +198,13 @@ Todos aceptan el parámetro `part` (ruta de la partición). Si se omite o está 
 ## Estructura del proyecto
 
 ```
-wii-manager/
+WiiGC-Manager/
 ├── wii-manager-server.py    # Motor común (Python 3, solo biblioteca estándar) y servidor de la versión web
 ├── wii-manager.html         # Versión web: interfaz (HTML + CSS + JS, sin dependencias)
 ├── launch.sh                # Versión web: lanzador
 ├── wii-manager-gtk/         # Versión de escritorio: app GTK4/libadwaita
 ├── run-gtk.sh               # Versión de escritorio: lanzador
-├── WiiGC-Manager/           # Versión de escritorio: copia empaquetable y archivos del Flatpak
+├── WiiGC-Manager/           # Versión de escritorio: copia empaquetable y archivos del Flatpak y de la AppImage
 ├── MANUAL.html              # Manual de uso de la versión de escritorio
 └── README.md
 ```
