@@ -191,7 +191,33 @@ def _install_one(app, base, cancel, on_bytes):
     if shutil.disk_usage(base).free < (app.get('uncompressed_size') or 0):
         raise OSError('no queda espacio suficiente en la unidad')
 
-    req = urllib.request.Request(archive_info['url'], headers=_HEADERS)
+    archive = _download_archive(app, archive_info['url'], cancel, on_bytes)
+    if archive is None and archive_info.get('hash'):
+        # La CDN puede seguir sirviendo el paquete de una versión anterior:
+        # con otra URL se le obliga a pedir el actual al servidor
+        archive = _download_archive(app, f"{archive_info['url']}?h={archive_info['hash']}", cancel, lambda _n: None)
+    if archive is None:
+        raise ValueError('la descarga no coincide con el catálogo: recarga el catálogo y vuelve a intentarlo')
+
+    for member in archive.namelist():
+        # No permitir que una ruta del zip escriba fuera de la unidad
+        if not (base / member).resolve().is_relative_to(base):
+            raise ValueError(f'ruta no válida en el paquete: {member}')
+    archive.extractall(base)
+
+
+def _download_archive(app, url, cancel, on_bytes):
+    """
+    Descarga el .zip de la app y devuelve el ZipFile, o None si no es el
+    paquete que anuncia el catálogo.
+
+    La suma MD5 del .zip no basta para saberlo: el servidor reempaqueta las
+    apps cada pocas horas (mismo contenido, fechas nuevas y por tanto otra
+    suma) y su CDN sigue sirviendo un rato el .zip anterior. Si la suma no
+    coincide, el paquete se da por bueno cuando está íntegro y su ejecutable
+    (boot.dol o boot.elf) es el del catálogo.
+    """
+    req = urllib.request.Request(url, headers=_HEADERS)
     buffer = io.BytesIO()
     with urllib.request.urlopen(req, timeout=60) as resp:
         while True:
@@ -203,13 +229,17 @@ def _install_one(app, base, cancel, on_bytes):
             buffer.write(chunk)
             on_bytes(len(chunk))
 
-    expected = (archive_info.get('hash') or '').lower()
-    if expected and hashlib.md5(buffer.getvalue()).hexdigest() != expected:
-        raise ValueError('la descarga está dañada (la suma MD5 no coincide)')
-
-    archive = zipfile.ZipFile(buffer)
-    for member in archive.namelist():
-        # No permitir que una ruta del zip escriba fuera de la unidad
-        if not (base / member).resolve().is_relative_to(base):
-            raise ValueError(f'ruta no válida en el paquete: {member}')
-    archive.extractall(base)
+    try:
+        archive = zipfile.ZipFile(buffer)
+    except zipfile.BadZipFile:
+        return None
+    expected = (app['assets']['archive'].get('hash') or '').lower()
+    if not expected or hashlib.md5(buffer.getvalue()).hexdigest() == expected:
+        return archive
+    binary = app['assets'].get('binary') or {}
+    name = f"apps/{app['slug']}/{(binary.get('url') or '').rsplit('/', 1)[-1]}"
+    try:
+        same_binary = hashlib.md5(archive.read(name)).hexdigest() == (binary.get('hash') or '').lower()
+        return archive if same_binary and archive.testzip() is None else None
+    except (KeyError, zipfile.BadZipFile):
+        return None
