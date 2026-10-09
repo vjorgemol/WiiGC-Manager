@@ -398,11 +398,12 @@ flatpak install --user WiiGC-Manager.flatpak</code></pre>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
 <h2 id="migrar">8. Migrar</h2>
-<p>Copia <strong>todos</strong> los juegos de una unidad a otra; por ejemplo, al pasar a un disco de más capacidad.</p>
+<p>Copia a una unidad los juegos de otra <strong>que le falten</strong>; por ejemplo, al pasar a otro disco o para completar una unidad con los juegos de otra. El destino puede ser más pequeño que el origen: basta con que quepan los juegos que se van a copiar.</p>
 <ol>
   <li>Conecta las dos unidades. Las FAT32 y NTFS tienen que estar montadas.</li>
   <li>Elige la <strong>unidad de origen</strong> y la <strong>unidad de destino</strong>. Por defecto, el origen es la unidad explorada.</li>
-  <li>Lee el resumen: cuántos juegos hay por copiar y cuánto ocupan, cuántos ya están en el destino y cuánto espacio libre queda. Si no caben, el botón <strong>Migrar</strong> queda desactivado.</li>
+  <li>Revisa la lista de <strong>juegos que faltan en el destino</strong>: salen todos marcados, cada uno con su tamaño. Desmarca los que no quieras copiar; <strong>Deseleccionar todo</strong> / <strong>Seleccionar todo</strong> los cambia de una vez.</li>
+  <li>Lee el resumen: cuántos juegos hay marcados y cuánto ocupan, cuántos ya están en el destino y cuánto espacio libre queda. Si los marcados no caben, el botón <strong>Migrar</strong> queda desactivado hasta que desmarques los suficientes.</li>
   <li>Opcional: activa <strong>Eliminar del origen los juegos migrados</strong>. Solo se eliminan los copiados correctamente, una vez terminada toda la copia, y nunca si cancelas. La app pide confirmación.</li>
   <li>Pulsa <strong>Migrar</strong>.</li>
 </ol>

@@ -8,7 +8,7 @@ from pathlib import Path
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
-from gi.repository import Gtk, Adw
+from gi.repository import GLib, Gtk, Adw
 
 APP_ID = 'org.wiigcmanager.Gtk'
 
@@ -37,6 +37,25 @@ def version():
     return release.get('version', '') if release is not None else ''
 
 
+def _text(element):
+    """Texto de un elemento del metainfo en una sola línea, escapado para Pango."""
+    return GLib.markup_escape_text(' '.join(''.join(element.itertext()).split()))
+
+
+def _details(info):
+    """Texto de «Detalles»: el resumen y, debajo, la descripción del metainfo (párrafos y listas)."""
+    blocks = []
+    summary = info.find('summary')
+    if summary is not None:
+        blocks.append(f'<b>{_text(summary)}</b>')
+    for child in info.findall('description/*'):
+        if child.tag in ('ul', 'ol'):
+            blocks.append('\n'.join(f'• {_text(item)}' for item in child.findall('li')))
+        else:
+            blocks.append(_text(child))
+    return '\n\n'.join(blocks)
+
+
 def present(parent):
     """Muestra el diálogo «Acerca de» sobre la ventana parent."""
     info = _metainfo()
@@ -45,10 +64,12 @@ def present(parent):
         application_name=info.findtext('name') or 'WiiGC Manager',
         application_icon=APP_ID,
         version=version() or 'desconocida',
-        comments=info.findtext('summary') or '',
+        comments=_details(info),
         developer_name=info.findtext('developer/name') or '',
         website=urls.get('homepage', ''),
         issue_url=urls.get('bugtracker', ''))
+    if urls.get('help'):
+        dialog.add_link('Manual de uso', urls['help'])
     if info.findtext('project_license') == 'MIT':
         dialog.set_license_type(Gtk.License.MIT_X11)
     # Novedades (el diálogo admite <p>, <ul>, <ol> y <li>): las de la última

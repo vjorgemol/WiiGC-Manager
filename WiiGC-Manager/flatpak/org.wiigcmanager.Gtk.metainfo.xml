@@ -10,12 +10,29 @@
   </developer>
   <url type="homepage">https://github.com/vjorgemol/WiiGC-Manager</url>
   <url type="bugtracker">https://github.com/vjorgemol/WiiGC-Manager/issues</url>
+  <url type="help">https://github.com/vjorgemol/WiiGC-Manager/blob/stable/WiiGC-Manager_Documentacion.pdf</url>
   <launchable type="desktop-id">org.wiigcmanager.Gtk.desktop</launchable>
   <description>
-    <p>Videoteca de juegos de Wii y GameCube para unidades USB/SD: añadir, eliminar, convertir,
-    verificar y migrar juegos a otra unidad, preparar la unidad para WiiFlow/Nintendont, descargar carátulas de GameTDB
-    y descargar homebrew de la Open Shop Channel.</p>
-    <p>Necesita wit y wwt (Wiimms ISO Tools) instalados en el sistema; para imágenes RVZ/GCZ, también Dolphin.</p>
+    <p>Videoteca de juegos de Wii y GameCube para unidades USB y tarjetas SD. Reúne en una sola ventana
+    todo lo necesario para llevar los juegos a la consola y mantener la unidad al día, sobre las
+    herramientas wit y wwt de Wiimm.</p>
+    <p>Con los juegos:</p>
+    <ul>
+      <li>Añadir juegos de Wii (ISO, WBFS, RVZ…) y de GameCube, y eliminarlos de uno en uno o varios a la vez.</li>
+      <li>Copiar los seleccionados a otra unidad, extraerlos al PC o migrar la videoteca entera a un disco de más capacidad.</li>
+      <li>Convertir entre ISO y WBFS, también en lote, y verificar la integridad de cada juego.</li>
+      <li>Abrir un juego en el emulador Dolphin con doble clic.</li>
+    </ul>
+    <p>Con la unidad:</p>
+    <ul>
+      <li>Formatearla y prepararla para WiiFlow, USB Loader GX y Nintendont, con los cargadores ya instalados.</li>
+      <li>Descargar homebrew del catálogo de la Open Shop Channel, y ver y eliminar el que ya está instalado.</li>
+      <li>Detectar al momento las unidades que se conectan o se retiran.</li>
+    </ul>
+    <p>Y para reconocer cada juego: carátulas de GameTDB (también para guardar o imprimir a tamaño de funda
+    de DVD), el banner animado del juego y su sonido, como en el menú de la consola.</p>
+    <p>Necesita wit y wwt (Wiimms ISO Tools) instalados en el sistema; para imágenes RVZ/GCZ y para jugar
+    desde la app, también Dolphin.</p>
   </description>
   <screenshots>
     <screenshot type="default">
@@ -28,6 +45,13 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.11.0" date="2026-10-09">
+      <description>
+        <ul>
+          <li>Migrar: la vista lista los juegos que faltan en la unidad de destino, cada uno con su tamaño y una casilla para elegir cuáles copiar. El espacio se calcula sobre los marcados, así que se puede completar una unidad más pequeña que la de origen siempre que quepan.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.10.1" date="2026-10-06">
       <description>
         <ul>

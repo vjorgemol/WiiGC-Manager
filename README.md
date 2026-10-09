@@ -31,7 +31,7 @@ Lo que hacen las dos:
 
 Lo que solo hace la versión de escritorio:
 
-- 🚚 **Migrar** todos los juegos de una unidad a otra, p. ej. a un disco de más capacidad
+- 🚚 **Migrar** a una unidad los juegos de otra que le falten (todos o los que elijas), aunque el destino sea más pequeño
 - 📤 **Copiar** los juegos seleccionados a otra unidad
 - 💾 **Extraer** juegos a una carpeta del PC, en ISO o WBFS
 - 🔌 **Detectar** al momento las unidades que se conectan o se retiran
