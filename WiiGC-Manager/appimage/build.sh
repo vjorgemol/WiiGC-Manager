@@ -4,8 +4,8 @@
 #
 # A diferencia del Flatpak, que usa el runtime de GNOME, la AppImage lleva
 # dentro todo lo que la app necesita: Python, PyGObject, GTK4, libadwaita y
-# GStreamer. Se toman de Ubuntu 24.04 (glibc 2.39), dentro de un contenedor,
-# así que el resultado funciona en Ubuntu 24.04 o posterior y en Fedora 40 o
+# GStreamer. Se toman de Ubuntu 22.04 (glibc 2.35), dentro de un contenedor,
+# así que el resultado funciona en Ubuntu 22.04 o posterior y en Fedora 36 o
 # posterior. Del sistema solo usa glibc, los controladores gráficos, las
 # fuentes y poco más (lista EXCLUDE), además de wit, wwt y demás herramientas.
 #
@@ -18,7 +18,7 @@
 set -euo pipefail
 
 APP_ID=org.wiigcmanager.Gtk
-BASE_IMAGE=docker.io/library/ubuntu:24.04
+BASE_IMAGE=docker.io/library/ubuntu:22.04
 ARCH="$(uname -m)"
 OUTPUT="WiiGC-Manager-$ARCH.AppImage"
 
