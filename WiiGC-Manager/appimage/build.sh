@@ -53,6 +53,7 @@ apt-get install -qq -y --no-install-recommends \
     gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-gstreamer-1.0 \
     gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-alsa \
     librsvg2-common adwaita-icon-theme dconf-gsettings-backend libglib2.0-bin \
+    libharfbuzz-gobject0 \
     ca-certificates curl file desktop-file-utils >/dev/null
 
 PYVER="$(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
