@@ -53,7 +53,7 @@ apt-get install -qq -y --no-install-recommends \
     gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-gstreamer-1.0 \
     gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-alsa \
     librsvg2-common adwaita-icon-theme dconf-gsettings-backend libglib2.0-bin \
-    libharfbuzz-gobject0 \
+    libharfbuzz-gobject0 shared-mime-info \
     ca-certificates curl file desktop-file-utils >/dev/null
 
 PYVER="$(python3 -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
@@ -98,13 +98,16 @@ for plugin in coreelements typefindfunctions playback audioconvert audioresample
 done
 
 # Datos: iconos Adwaita (los cursores son los del sistema) y esquemas de GSettings
-# de GTK (selector de archivos…); los demás esquemas se leen del sistema
+# de GTK (selector de archivos…); los demás esquemas se leen del sistema.
+# La base de datos MIME es necesaria para que GIO detecte el tipo de los SVG y
+# pueda cargarlos a través del loader de gdk-pixbuf.
 mkdir -p "$USR/share/icons/hicolor" "$USR/share/glib-2.0/schemas"
 cp -a /usr/share/icons/Adwaita "$USR/share/icons/"
 rm -rf "$USR/share/icons/Adwaita/cursors"
 cp /usr/share/icons/hicolor/index.theme "$USR/share/icons/hicolor/"
 cp /usr/share/glib-2.0/schemas/org.gtk.gtk4.* "$USR/share/glib-2.0/schemas/"
 glib-compile-schemas "$USR/share/glib-2.0/schemas"
+cp -a /usr/share/mime "$USR/share/"
 
 # Typelibs de GObject Introspection y bibliotecas compartidas: se copian las que
 # usa la app y todo aquello de lo que dependen, salvo lo que debe venir del sistema.
