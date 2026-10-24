@@ -1,0 +1,41 @@
+#!/usr/bin/make -f
+
+export PYBUILD_NAME=wiigc-manager
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	# Instalar los archivos Python de la aplicación
+	install -d debian/wiigc-manager/usr/share/wiigc-manager
+	cp -r wii-manager-gtk/* debian/wiigc-manager/usr/share/wiigc-manager/
+	cp wii-manager-server.py debian/wiigc-manager/usr/share/wiigc-manager/
+
+	# Instalar el ejecutable
+	install -d debian/wiigc-manager/usr/bin
+	install -m 755 debian/wiigc-manager.sh debian/wiigc-manager/usr/bin/wiigc-manager
+
+	# Instalar el archivo .desktop
+	install -d debian/wiigc-manager/usr/share/applications
+	install -m 644 WiiGC-Manager/flatpak/org.wiigcmanager.Gtk.desktop \
+		debian/wiigc-manager/usr/share/applications/org.wiigcmanager.Gtk.desktop
+
+	# Instalar el icono
+	install -d debian/wiigc-manager/usr/share/icons/hicolor/scalable/apps
+	install -m 644 WiiGC-Manager/flatpak/org.wiigcmanager.Gtk.svg \
+		debian/wiigc-manager/usr/share/icons/hicolor/scalable/apps/org.wiigcmanager.Gtk.svg
+
+	# Instalar documentación
+	install -d debian/wiigc-manager/usr/share/doc/wiigc-manager
+	install -m 644 README.md debian/wiigc-manager/usr/share/doc/wiigc-manager/
+	install -m 644 MANUAL.html debian/wiigc-manager/usr/share/doc/wiigc-manager/
+
+override_dh_auto_build:
+	# No necesitamos compilar nada, es Python puro
+
+override_dh_auto_test:
+	# Saltamos los tests por ahora
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf build

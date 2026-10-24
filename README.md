@@ -13,7 +13,7 @@ El proyecto tiene dos interfaces sobre el mismo motor (`wii-manager-server.py`).
 | | [Versión de escritorio (GTK4)](#versión-de-escritorio-gtk4) | [Versión web](#versión-web) |
 |---|---|---|
 | **Qué es** | App nativa GTK4/libadwaita | Servidor local + interfaz en el navegador |
-| **Cómo se lanza** | `./run-gtk.sh`, como Flatpak o como AppImage | `./launch.sh` |
+| **Cómo se lanza** | `./run-gtk.sh`, como Flatpak, AppImage o [paquete .deb](DEBIAN.md) | `./launch.sh` |
 | **Necesita** | Python 3.8+, PyGObject, GTK 4, libadwaita | Python 3.6+ y un navegador |
 | **Estado** | Desarrollo activo; la más completa | Versión original |
 | **Código** | `wii-manager-gtk/` | `wii-manager.html` |
@@ -121,6 +121,52 @@ cd WiiGC-Manager/appimage
 ```
 
 Igual que el Flatpak, usa el `wit`, el `wwt` y el Dolphin instalados en el sistema: no los incluye.
+
+### Instalar como paquete .deb (Debian 13 / Trixie)
+
+Paquete nativo `.deb` optimizado para **Debian 13 (Trixie)** y entornos como **XFCE**. Se integra completamente con el sistema.
+
+#### Configuración previa necesaria
+
+Antes de construir o usar la aplicación, asegúrate de tener instalado `wit`:
+
+```bash
+# Instalar wit (obligatorio)
+sudo apt install wit
+```
+
+Para leer particiones WBFS, tu usuario debe estar en el grupo `disk`:
+
+```bash
+# Añadir tu usuario al grupo disk
+sudo usermod -aG disk $USER
+# IMPORTANTE: Debes cerrar sesión y volver a entrar para que tenga efecto
+```
+
+#### Construcción e instalación del paquete
+
+```bash
+# Instalar dependencias de construcción
+sudo apt install debhelper dh-python python3-all python3-gi gir1.2-gtk-4.0 gir1.2-adw-1
+
+# Construir el paquete
+./build-deb.sh
+
+# Instalar
+cd ..
+sudo dpkg -i wiigc-manager_1.0.0-1_all.deb
+sudo apt install -f  # Si hay dependencias faltantes
+```
+
+#### Lanzar la aplicación
+
+Desde el menú de aplicaciones (Aplicaciones → Utilidades → **WiiGC Manager**) o desde la terminal:
+
+```bash
+wiigc-manager
+```
+
+📖 **Documentación completa**: Ver [DEBIAN.md](DEBIAN.md) para instrucciones detalladas, solución de problemas y optimizaciones para XFCE.
 
 La versión instalada y las novedades de cada versión se consultan en el diálogo **Acerca de** de la app.
 

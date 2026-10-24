@@ -1,0 +1,43 @@
+Source: wiigc-manager
+Section: utils
+Priority: optional
+Maintainer: WiiGC Manager Team <noreply@wiigcmanager.org>
+Build-Depends: debhelper-compat (= 13),
+               dh-python,
+               python3-all,
+               python3-gi,
+               gir1.2-gtk-4.0,
+               gir1.2-adw-1
+Standards-Version: 4.6.2
+Homepage: https://github.com/vjorgemol/WiiGC-Manager
+Vcs-Git: https://github.com/vjorgemol/WiiGC-Manager.git
+Vcs-Browser: https://github.com/vjorgemol/WiiGC-Manager
+Rules-Requires-Root: no
+
+Package: wiigc-manager
+Architecture: all
+Depends: ${python3:Depends},
+         ${misc:Depends},
+         python3-gi,
+         gir1.2-gtk-4.0 (>= 4.0),
+         gir1.2-adw-1 (>= 1.0),
+         gir1.2-gstreamer-1.0,
+         wit
+Recommends: dolphin-emu
+Description: Gestor de juegos de Wii y GameCube para unidades USB/SD
+ WiiGC Manager permite añadir, eliminar, convertir, verificar y copiar
+ juegos de Wii y GameCube en unidades USB y tarjetas SD para usar con
+ WiiFlow, USB Loader GX y Nintendont.
+ .
+ Características principales:
+  - Listar juegos con título, ID, tamaño y región
+  - Añadir y eliminar juegos (ISO/WBFS para Wii, ISO para GameCube)
+  - Convertir entre formatos ISO y WBFS
+  - Verificar integridad de los juegos
+  - Migrar juegos entre unidades
+  - Descargar carátulas desde GameTDB
+  - Reproducir banners animados y sonidos
+  - Descargar homebrew desde Open Shop Channel
+  - Jugar directamente con Dolphin (si está instalado)
+ .
+ Construido sobre las herramientas wit y wwt de Wiimm.

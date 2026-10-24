@@ -2,3 +2,13 @@ __pycache__/
 *.log
 *.flatpak
 *.AppImage
+
+# Debian package build artifacts
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
+debian/*.substvars
+debian/wiigc-manager/
+*.deb
+*.buildinfo
+*.changes

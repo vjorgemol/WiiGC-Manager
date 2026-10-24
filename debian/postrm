@@ -1,0 +1,20 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    remove|purge)
+        # Actualizar la caché de iconos
+        if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+            gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
+        fi
+
+        # Actualizar la base de datos de aplicaciones
+        if command -v update-desktop-database >/dev/null 2>&1; then
+            update-desktop-database -q || true
+        fi
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

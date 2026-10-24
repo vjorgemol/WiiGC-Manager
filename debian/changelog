@@ -1,0 +1,17 @@
+wiigc-manager (1.0.0-1) trixie; urgency=medium
+
+  * Initial release for Debian 13 (Trixie)
+  * GTK4/libadwaita native application
+  * Support for Wii and GameCube games management
+  * Features include:
+    - Game library with covers from GameTDB
+    - Add, remove, convert games (ISO/WBFS)
+    - Migrate and copy games between drives
+    - Verify game integrity
+    - Download homebrew from Open Shop Channel
+    - Play games with Dolphin emulator
+    - Animated banners and sound playback
+  * Built on Wiimm's wit and wwt tools
+  * Optimized for XFCE and other desktop environments
+
+ -- WiiGC Manager Team <noreply@wiigcmanager.org>  Sat, 24 Oct 2026 15:00:00 +0000

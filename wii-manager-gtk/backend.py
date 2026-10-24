@@ -14,7 +14,7 @@ from pathlib import Path
 
 from gi.repository import GLib
 
-_SERVER_PATH = Path(__file__).resolve().parent.parent / 'wii-manager-server.py'
+_SERVER_PATH = Path(__file__).resolve().parent / 'wii-manager-server.py'
 
 # El nombre del fichero lleva guiones y no se puede importar con «import»: se
 # carga por su ruta. El resto de la app lo usa como core.api_xxx(params).
